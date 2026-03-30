@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calorite</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="logo">🔥 Calorite</span>
+    </div>
+    <div class="date-nav">
+      <button id="btn-prev-day" class="icon-btn" title="Previous day">&#8592;</button>
+      <button id="btn-today" class="date-label" title="Jump to today"></button>
+      <button id="btn-next-day" class="icon-btn" title="Next day">&#8594;</button>
+    </div>
+    <div class="header-right">
+      <button id="btn-settings" class="icon-btn" title="Settings">&#9881;</button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="app-main">
+
+    <!-- DAILY SUMMARY CARDS -->
+    <section class="summary-cards">
+      <div class="card cal-card">
+        <div class="card-label">Calories</div>
+        <div class="card-value" id="cal-consumed">0</div>
+        <div class="card-goal" id="cal-goal-label">/ 2000 kcal</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar cal-bar" id="cal-bar"></div>
+        </div>
+      </div>
+      <div class="card macro-card">
+        <div class="card-label">Protein</div>
+        <div class="card-value" id="prot-consumed">0g</div>
+        <div class="card-goal" id="prot-goal-label">/ 150g</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar prot-bar" id="prot-bar"></div>
+        </div>
+      </div>
+      <div class="card macro-card">
+        <div class="card-label">Carbs</div>
+        <div class="card-value" id="carb-consumed">0g</div>
+        <div class="card-goal" id="carb-goal-label">/ 250g</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar carb-bar" id="carb-bar"></div>
+        </div>
+      </div>
+      <div class="card macro-card">
+        <div class="card-label">Fat</div>
+        <div class="card-value" id="fat-consumed">0g</div>
+        <div class="card-goal" id="fat-goal-label">/ 65g</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar fat-bar" id="fat-bar"></div>
+        </div>
+      </div>
+      <div class="card water-card">
+        <div class="card-label">Water</div>
+        <div class="water-glasses" id="water-glasses"></div>
+        <div class="card-goal" id="water-goal-label">/ 8 glasses</div>
+      </div>
+    </section>
+
+    <!-- MEAL LOG -->
+    <section class="meal-section">
+      <div class="section-header">
+        <h2>Meals</h2>
+        <div class="add-btns">
+          <button id="btn-add-ai" class="btn btn-ai">&#10024; Ask AI</button>
+          <button id="btn-add-manual" class="btn btn-primary">+ Add Meal</button>
+        </div>
+      </div>
+      <div id="meal-list" class="meal-list">
+        <p class="empty-state">No meals logged yet. Add one above!</p>
+      </div>
+    </section>
+
+    <!-- CHARTS -->
+    <section class="charts-section">
+      <div class="chart-card">
+        <h3>Weekly Calories</h3>
+        <canvas id="chart-weekly"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Today's Macros</h3>
+        <canvas id="chart-macros"></canvas>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- ADD / EDIT MEAL MODAL -->
+  <div id="modal-meal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-meal-title">Add Meal</h2>
+        <button class="modal-close" data-close="modal-meal">&times;</button>
+      </div>
+      <form id="form-meal" autocomplete="off">
+        <label>Meal Name
+          <input type="text" id="meal-name" placeholder="e.g. Chicken breast & rice" required />
+        </label>
+        <div class="form-row">
+          <label>Calories (kcal)
+            <input type="number" id="meal-cal" placeholder="0" min="0" required />
+          </label>
+          <label>Time
+            <input type="time" id="meal-time" />
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Protein (g)
+            <input type="number" id="meal-prot" placeholder="0" min="0" step="0.1" />
+          </label>
+          <label>Carbs (g)
+            <input type="number" id="meal-carb" placeholder="0" min="0" step="0.1" />
+          </label>
+          <label>Fat (g)
+            <input type="number" id="meal-fat" placeholder="0" min="0" step="0.1" />
+          </label>
+        </div>
+        <label>Notes (optional)
+          <input type="text" id="meal-notes" placeholder="Any extra details" />
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close="modal-meal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-meal">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- AI ESTIMATOR MODAL -->
+  <div id="modal-ai" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>AI Calorie Estimator</h2>
+        <button class="modal-close" data-close="modal-ai">&times;</button>
+      </div>
+      <div id="ai-setup-notice" class="notice hidden">
+        <p>No AI provider configured. <a href="#" id="link-open-settings">Open Settings</a> to add your API key.</p>
+      </div>
+      <div id="ai-form-wrap">
+        <label>Describe your meal
+          <textarea id="ai-meal-desc" rows="3" placeholder="e.g. Two breakfast burritos with eggs, cheese and bacon"></textarea>
+        </label>
+        <div id="ai-result" class="ai-result hidden">
+          <h4>Estimated Nutrition</h4>
+          <div class="ai-result-grid">
+            <div class="ai-result-item"><span class="ai-label">Calories</span><span id="ai-res-cal" class="ai-val">–</span></div>
+            <div class="ai-result-item"><span class="ai-label">Protein</span><span id="ai-res-prot" class="ai-val">–</span></div>
+            <div class="ai-result-item"><span class="ai-label">Carbs</span><span id="ai-res-carb" class="ai-val">–</span></div>
+            <div class="ai-result-item"><span class="ai-label">Fat</span><span id="ai-res-fat" class="ai-val">–</span></div>
+          </div>
+          <p class="ai-disclaimer">AI estimates may not be perfectly accurate. Review before saving.</p>
+        </div>
+        <div id="ai-error" class="ai-error hidden"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close="modal-ai">Cancel</button>
+          <button type="button" id="btn-ai-estimate" class="btn btn-ai">&#10024; Estimate</button>
+          <button type="button" id="btn-ai-add" class="btn btn-primary hidden">Add to Log</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="modal-settings" class="modal-overlay hidden">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button class="modal-close" data-close="modal-settings">&times;</button>
+      </div>
+      <div class="settings-tabs">
+        <button class="tab-btn active" data-tab="tab-goals">Goals</button>
+        <button class="tab-btn" data-tab="tab-ai-config">AI Provider</button>
+        <button class="tab-btn" data-tab="tab-data">Data</button>
+      </div>
+
+      <!-- GOALS TAB -->
+      <div id="tab-goals" class="tab-panel active">
+        <form id="form-goals" autocomplete="off">
+          <div class="form-row">
+            <label>Daily Calories (kcal)
+              <input type="number" id="goal-cal" min="500" max="10000" placeholder="2000" />
+            </label>
+            <label>Protein (g)
+              <input type="number" id="goal-prot" min="0" max="500" placeholder="150" />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Carbs (g)
+              <input type="number" id="goal-carb" min="0" max="1000" placeholder="250" />
+            </label>
+            <label>Fat (g)
+              <input type="number" id="goal-fat" min="0" max="500" placeholder="65" />
+            </label>
+          </div>
+          <label>Water (glasses/day)
+            <input type="number" id="goal-water" min="1" max="20" placeholder="8" />
+          </label>
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-primary">Save Goals</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- AI CONFIG TAB -->
+      <div id="tab-ai-config" class="tab-panel hidden">
+        <form id="form-ai-config" autocomplete="off">
+          <label>AI Provider
+            <select id="ai-provider">
+              <option value="claude">Claude (Anthropic)</option>
+              <option value="openai">ChatGPT (OpenAI)</option>
+              <option value="gemini">Gemini (Google)</option>
+            </select>
+          </label>
+          <label id="ai-model-label">Model
+            <select id="ai-model">
+              <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+              <option value="claude-opus-4-6">claude-opus-4-6</option>
+              <option value="claude-haiku-4-5-20251001">claude-haiku-4-5-20251001</option>
+            </select>
+          </label>
+          <label>API Key
+            <div class="key-input-wrap">
+              <input type="password" id="ai-api-key" placeholder="Paste your API key here" autocomplete="off" />
+              <button type="button" id="btn-toggle-key" class="icon-btn small">&#128065;</button>
+            </div>
+          </label>
+          <p class="settings-note">Your API key is stored only in your browser's localStorage and never sent anywhere except directly to the chosen AI provider.</p>
+          <div class="modal-actions">
+            <button type="button" id="btn-clear-key" class="btn btn-ghost">Clear Key</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- DATA TAB -->
+      <div id="tab-data" class="tab-panel hidden">
+        <div class="data-actions">
+          <div class="data-action-row">
+            <div>
+              <strong>Export Data</strong>
+              <p>Download all your data as a JSON file.</p>
+            </div>
+            <button id="btn-export" class="btn btn-primary">Export JSON</button>
+          </div>
+          <div class="data-action-row">
+            <div>
+              <strong>Import Data</strong>
+              <p>Restore from a previously exported JSON file. Existing data will be merged.</p>
+            </div>
+            <label class="btn btn-primary" for="input-import">Import JSON
+              <input type="file" id="input-import" accept=".json" style="display:none" />
+            </label>
+          </div>
+          <div class="data-action-row danger-row">
+            <div>
+              <strong>Erase All Data</strong>
+              <p>Permanently delete all meals, settings, and goals.</p>
+            </div>
+            <button id="btn-erase" class="btn btn-danger">Erase Everything</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM DIALOG -->
+  <div id="modal-confirm" class="modal-overlay hidden">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 id="confirm-title">Are you sure?</h2>
+      </div>
+      <p id="confirm-message"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" data-close="modal-confirm">Cancel</button>
+        <button id="btn-confirm-yes" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
