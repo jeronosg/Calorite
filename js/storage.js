@@ -192,7 +192,62 @@ const Storage = (() => {
     }
   }
 
-  function eraseAllData() {
+  // ---- Share via URL ----
+
+  // Compress a string using deflate-raw (native CompressionStream API)
+  // then encode as base64url so it's safe in a URL fragment.
+  async function compress(str) {
+    const input = new TextEncoder().encode(str);
+    const cs    = new CompressionStream('deflate-raw');
+    const writer = cs.writable.getWriter();
+    writer.write(input);
+    writer.close();
+    const buf = await new Response(cs.readable).arrayBuffer();
+    // base64url: no padding, + → -, / → _
+    return btoa(String.fromCharCode(...new Uint8Array(buf)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  async function decompress(b64url) {
+    const b64   = b64url.replace(/-/g, '+').replace(/_/g, '/');
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const ds    = new DecompressionStream('deflate-raw');
+    const writer = ds.writable.getWriter();
+    writer.write(bytes);
+    writer.close();
+    const buf = await new Response(ds.readable).arrayBuffer();
+    return new TextDecoder().decode(buf);
+  }
+
+  async function generateShareURL() {
+    const payload = JSON.stringify({
+      v:    1,
+      days: getAllDays(),
+      goals: getGoals(),
+    });
+    const token = await compress(payload);
+    const base  = location.href.split('#')[0];
+    return `${base}#share=${token}`;
+  }
+
+  // Returns parsed { days, goals } if the current URL has a share fragment,
+  // or null if it doesn't.
+  async function parseShareURL() {
+    const hash = location.hash;
+    if (!hash.startsWith('#share=')) return null;
+    const token = hash.slice(7);
+    if (!token) return null;
+    const json   = await decompress(token);
+    const data   = JSON.parse(json);
+    if (!data.days) throw new Error('Invalid share link.');
+    return data;
+  }
+
+  function clearShareHash() {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+
     localStorage.removeItem(KEYS.DAYS);
     localStorage.removeItem(KEYS.GOALS);
     localStorage.removeItem(KEYS.AI);
@@ -200,6 +255,9 @@ const Storage = (() => {
 
   // ---- public API ----
   return {
+    generateShareURL,
+    parseShareURL,
+    clearShareHash,
     dateKey,
     getDay,
     getAllDays,
