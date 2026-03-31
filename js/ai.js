@@ -194,22 +194,56 @@ INCORRECT output examples (never do these):
     }
   }
 
-  // ---- JSON parser ----
+  // ---- JSON parser (multi-strategy, resilient) ----
 
   function parseNutritionJSON(text) {
-    const jsonMatch = text.match(/\{[\s\S]*?\}/);
-    if (!jsonMatch) throw new Error('AI returned an unexpected response format.');
+    const raw = text.trim();
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    // Strategy 1: greedy match to capture the full {...} block, then JSON.parse
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        const result = extractFields(parsed);
+        if (result.calories > 0) return result;
+      } catch { /* fall through */ }
+    }
+
+    // Strategy 2: the whole trimmed response might be valid JSON
+    try {
+      const parsed = JSON.parse(raw);
+      const result = extractFields(parsed);
+      if (result.calories > 0) return result;
+    } catch { /* fall through */ }
+
+    // Strategy 3: pull each value out by key name using regex —
+    // handles "calories: 650" or "calories = 650" even without braces
     const result = {
-      calories: Math.round(Number(parsed.calories) || 0),
-      protein:  Math.round(Number(parsed.protein)  || 0),
-      carbs:    Math.round(Number(parsed.carbs)     || 0),
-      fat:      Math.round(Number(parsed.fat)       || 0),
+      calories: extractNumByKey(raw, 'calories'),
+      protein:  extractNumByKey(raw, 'protein'),
+      carbs:    extractNumByKey(raw, 'carbs') || extractNumByKey(raw, 'carbohydrates'),
+      fat:      extractNumByKey(raw, 'fat'),
     };
+    if (result.calories > 0) return result;
 
-    if (result.calories <= 0) throw new Error('AI returned zero or invalid calorie estimate.');
-    return result;
+    // Nothing worked — include a snippet of the raw response to help debug
+    const snippet = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
+    throw new Error(`Could not parse AI response. Raw output: "${snippet}"`);
+  }
+
+  function extractFields(obj) {
+    return {
+      calories: Math.round(Number(obj.calories) || 0),
+      protein:  Math.round(Number(obj.protein)  || 0),
+      carbs:    Math.round(Number(obj.carbs) || Number(obj.carbohydrates) || 0),
+      fat:      Math.round(Number(obj.fat)       || 0),
+    };
+  }
+
+  function extractNumByKey(text, key) {
+    const re = new RegExp(`["']?${key}["']?\\s*[:=]\\s*(\\d+(?:\\.\\d+)?)`, 'i');
+    const m = text.match(re);
+    return m ? Math.round(Number(m[1])) : 0;
   }
 
   // ---- Model lists ----
