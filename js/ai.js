@@ -8,14 +8,26 @@
 
 const AI = (() => {
 
-  const SYSTEM_PROMPT = `You are a nutrition expert. When given a meal description, estimate its nutritional content.
-Respond ONLY with a valid JSON object in this exact format, no other text:
-{"calories": <number>, "protein": <number>, "carbs": <number>, "fat": <number>}
-All values should be whole numbers representing kcal and grams respectively.
-Be realistic with your estimates based on typical portion sizes.`;
+  const SYSTEM_PROMPT = `You are a nutrition database. Your sole function is to return nutritional estimates as raw JSON.
+
+RULES — follow every rule without exception:
+1. Output ONLY a single JSON object. No prose, no explanation, no markdown, no code fences.
+2. The JSON must contain exactly these four keys: "calories", "protein", "carbs", "fat".
+3. Every value must be a positive integer (whole number). No strings, no nulls, no decimals.
+4. "calories" is in kcal. "protein", "carbs", and "fat" are in grams.
+5. If the input is ambiguous, assume a typical restaurant serving size.
+6. Never refuse. Always produce the four-key JSON object.
+
+CORRECT output example:
+{"calories":650,"protein":28,"carbs":72,"fat":24}
+
+INCORRECT output examples (never do these):
+- "Here are the estimated calories: ..."
+- \`\`\`json { ... } \`\`\`
+- {"calories":"650","protein":null}`;
 
   const USER_PROMPT = (desc) =>
-    `Estimate the nutritional content of this meal: ${desc}`;
+    `Return the JSON nutritional estimate for: ${desc}`;
 
   // ---- Cloud providers ----
 
