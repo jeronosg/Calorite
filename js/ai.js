@@ -75,7 +75,7 @@ Be realistic with your estimates based on typical portion sizes.`;
   }
 
   async function estimateWithGemini(description, config) {
-    const model = config.model || 'gemini-1.5-flash';
+    const model = config.model || 'gemini-3-flash-preview';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`;
 
     const response = await fetch(url, {
@@ -214,9 +214,10 @@ Be realistic with your estimates based on typical portion sizes.`;
       { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
     ],
     gemini: [
-      { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash (recommended)' },
-      { value: 'gemini-1.5-pro',   label: 'Gemini 1.5 Pro' },
-      { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+      { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash Preview (recommended)' },
+      { value: 'gemini-2.0-flash',       label: 'Gemini 2.0 Flash' },
+      { value: 'gemini-1.5-pro',         label: 'Gemini 1.5 Pro' },
+      { value: 'gemini-1.5-flash',       label: 'Gemini 1.5 Flash' },
     ],
     // Ollama and chromeai handled separately (text input / no model selection)
   };
