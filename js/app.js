@@ -462,60 +462,75 @@
 
   // ---- Share via link ----
 
-  $('btn-share').addEventListener('click', async () => {
-    const btn = $('btn-share');
-    btn.disabled = true;
-    btn.textContent = 'Generating…';
-    try {
-      const url   = await Storage.generateShareURL();
-      const input = $('share-url-input');
-      input.value = url;
-      $('share-url-row').classList.remove('hidden');
-      input.select();
-    } catch (err) {
-      showToast('Could not generate link: ' + err.message, 'error');
-    } finally {
-      btn.disabled    = false;
-      btn.textContent = 'Get Link';
-    }
-  });
-
-  $('btn-copy-share').addEventListener('click', () => {
-    const input = $('share-url-input');
-    input.select();
-    navigator.clipboard.writeText(input.value)
-      .then(() => showToast('Link copied!', 'success'))
-      .catch(() => { document.execCommand('copy'); showToast('Link copied!', 'success'); });
-  });
-
   let _pendingShare = null;
 
-  $('btn-import-share').addEventListener('click', () => {
-    if (!_pendingShare) return;
-    try {
-      Storage.importData(JSON.stringify(_pendingShare));
-      render();
-      showToast('Data imported successfully', 'success');
-    } catch (err) {
-      showToast('Import failed: ' + err.message, 'error');
-    }
-    _pendingShare = null;
-    $('share-banner').classList.add('hidden');
-    Storage.clearShareHash();
-  });
+  function _showBanner(visible) {
+    $('share-banner').style.display = visible ? 'flex' : 'none';
+  }
+  function _showUrlRow(visible) {
+    $('share-url-row').style.display = visible ? 'flex' : 'none';
+  }
 
-  $('btn-dismiss-share').addEventListener('click', () => {
-    _pendingShare = null;
-    $('share-banner').classList.add('hidden');
-    Storage.clearShareHash();
-  });
+  if ($('btn-share')) {
+    $('btn-share').addEventListener('click', async () => {
+      const btn = $('btn-share');
+      btn.disabled = true;
+      btn.textContent = 'Generating…';
+      try {
+        const url   = await Storage.generateShareURL();
+        const input = $('share-url-input');
+        input.value = url;
+        _showUrlRow(true);
+        input.select();
+      } catch (err) {
+        showToast('Could not generate link: ' + err.message, 'error');
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Get Link';
+      }
+    });
+  }
+
+  if ($('btn-copy-share')) {
+    $('btn-copy-share').addEventListener('click', () => {
+      const input = $('share-url-input');
+      input.select();
+      navigator.clipboard.writeText(input.value)
+        .then(() => showToast('Link copied!', 'success'))
+        .catch(() => { document.execCommand('copy'); showToast('Link copied!', 'success'); });
+    });
+  }
+
+  if ($('btn-import-share')) {
+    $('btn-import-share').addEventListener('click', () => {
+      if (!_pendingShare) return;
+      try {
+        Storage.importData(JSON.stringify(_pendingShare));
+        render();
+        showToast('Data imported successfully', 'success');
+      } catch (err) {
+        showToast('Import failed: ' + err.message, 'error');
+      }
+      _pendingShare = null;
+      _showBanner(false);
+      Storage.clearShareHash();
+    });
+  }
+
+  if ($('btn-dismiss-share')) {
+    $('btn-dismiss-share').addEventListener('click', () => {
+      _pendingShare = null;
+      _showBanner(false);
+      Storage.clearShareHash();
+    });
+  }
 
   async function checkShareURL() {
     try {
       const data = await Storage.parseShareURL();
       if (!data) return;
       _pendingShare = data;
-      $('share-banner').classList.remove('hidden');
+      _showBanner(true);
     } catch {
       Storage.clearShareHash();
     }
