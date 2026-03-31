@@ -587,45 +587,6 @@ label textarea { resize: vertical; min-height: 70px; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ---- SHARE BANNER ---- */
-.share-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(168,139,250,0.12));
-  border-bottom: 1px solid rgba(56,189,248,0.35);
-  font-size: 0.9rem;
-  flex-wrap: wrap;
-}
-.share-banner.hidden { display: none; }
-.share-banner-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
-
-/* ---- SHARE URL ROW ---- */
-.share-url-row {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0 1rem 0.5rem;
-  animation: fade-in 0.15s ease;
-}
-.share-url-row.hidden { display: none; }
-.share-url-row input {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--accent-water);
-  color: var(--text-muted);
-  border-radius: 8px;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.82rem;
-  font-family: monospace;
-  min-width: 0;
-}
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 /* ---- CHROME AI STATUS ---- */
 .chrome-ai-status {
   padding: 0.6rem 0.9rem;
@@ -650,6 +611,48 @@ label textarea { resize: vertical; min-height: 70px; }
 }
 .settings-note a { color: var(--accent-cal); text-decoration: none; }
 .settings-note a:hover { text-decoration: underline; }
+
+/* ---- SHARE BANNER ---- */
+.share-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, rgba(56,189,248,0.1), rgba(168,139,250,0.1));
+  border-bottom: 1px solid rgba(56,189,248,0.3);
+  font-size: 0.9rem;
+}
+.share-banner.hidden { display: none; }
+.share-banner-btns { display: flex; gap: 0.5rem; }
+
+/* ---- SHARE URL ROW ---- */
+.share-url-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--accent-water);
+  border-radius: var(--radius);
+  margin: 0 0 0.5rem;
+  animation: fade-in 0.15s ease;
+}
+.share-url-row.hidden { display: none; }
+.share-url-row input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: monospace;
+  font-size: 0.8rem;
+  min-width: 0;
+  outline: none;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 600px) {

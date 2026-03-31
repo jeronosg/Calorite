@@ -192,26 +192,39 @@ const Storage = (() => {
     }
   }
 
+  function eraseAllData() {
+    localStorage.removeItem(KEYS.DAYS);
+    localStorage.removeItem(KEYS.GOALS);
+    localStorage.removeItem(KEYS.AI);
+  }
+
   // ---- Share via URL ----
 
-  // Compress a string using deflate-raw (native CompressionStream API)
-  // then encode as base64url so it's safe in a URL fragment.
-  async function compress(str) {
-    const input = new TextEncoder().encode(str);
-    const cs    = new CompressionStream('deflate-raw');
+  // Chunk-based base64 encode — avoids stack overflow on large arrays
+  function _uint8ToBase64(bytes) {
+    let binary = '';
+    const chunk = 8192;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return btoa(binary);
+  }
+
+  async function _compress(str) {
+    const input  = new TextEncoder().encode(str);
+    const cs     = new CompressionStream('deflate-raw');
     const writer = cs.writable.getWriter();
     writer.write(input);
     writer.close();
     const buf = await new Response(cs.readable).arrayBuffer();
-    // base64url: no padding, + → -, / → _
-    return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    return _uint8ToBase64(new Uint8Array(buf))
       .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 
-  async function decompress(b64url) {
-    const b64   = b64url.replace(/-/g, '+').replace(/_/g, '/');
-    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    const ds    = new DecompressionStream('deflate-raw');
+  async function _decompress(b64url) {
+    const b64    = b64url.replace(/-/g, '+').replace(/_/g, '/');
+    const bytes  = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const ds     = new DecompressionStream('deflate-raw');
     const writer = ds.writable.getWriter();
     writer.write(bytes);
     writer.close();
@@ -220,37 +233,23 @@ const Storage = (() => {
   }
 
   async function generateShareURL() {
-    const payload = JSON.stringify({
-      v:    1,
-      days: getAllDays(),
-      goals: getGoals(),
-    });
-    const token = await compress(payload);
-    const base  = location.href.split('#')[0];
-    return `${base}#share=${token}`;
+    const json  = JSON.stringify({ v: 1, days: getAllDays(), goals: getGoals() });
+    const token = await _compress(json);
+    return location.href.split('#')[0] + '#share=' + token;
   }
 
-  // Returns parsed { days, goals } if the current URL has a share fragment,
-  // or null if it doesn't.
   async function parseShareURL() {
-    const hash = location.hash;
-    if (!hash.startsWith('#share=')) return null;
-    const token = hash.slice(7);
+    if (!location.hash.startsWith('#share=')) return null;
+    const token = location.hash.slice(7);
     if (!token) return null;
-    const json   = await decompress(token);
-    const data   = JSON.parse(json);
+    const json = await _decompress(token);
+    const data = JSON.parse(json);
     if (!data.days) throw new Error('Invalid share link.');
     return data;
   }
 
   function clearShareHash() {
     history.replaceState(null, '', location.pathname + location.search);
-  }
-
-  function eraseAllData() {
-    localStorage.removeItem(KEYS.DAYS);
-    localStorage.removeItem(KEYS.GOALS);
-    localStorage.removeItem(KEYS.AI);
   }
 
   // ---- public API ----

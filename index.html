@@ -9,11 +9,11 @@
 </head>
 <body>
 
-  <!-- SHARE IMPORT BANNER (shown when URL contains #share=) -->
+  <!-- SHARE IMPORT BANNER -->
   <div id="share-banner" class="share-banner hidden">
     <span>📲 This link contains shared Calorite data.</span>
-    <div class="share-banner-actions">
-      <button id="btn-import-share" class="btn btn-primary">Import & Merge</button>
+    <div class="share-banner-btns">
+      <button id="btn-import-share" class="btn btn-primary">Import &amp; Merge</button>
       <button id="btn-dismiss-share" class="btn btn-ghost">Dismiss</button>
     </div>
   </div>
@@ -273,12 +273,12 @@
           <div class="data-action-row">
             <div>
               <strong>Share via Link</strong>
-              <p>Generate a compressed link to transfer your data to another device.</p>
+              <p>Generate a compressed link to open your data on another device.</p>
             </div>
-            <button id="btn-share" class="btn btn-primary">Share Link</button>
+            <button id="btn-share" class="btn btn-primary">Get Link</button>
           </div>
           <div id="share-url-row" class="share-url-row hidden">
-            <input type="text" id="share-url-display" readonly />
+            <input id="share-url-input" type="text" readonly />
             <button id="btn-copy-share" class="btn btn-primary">Copy</button>
           </div>
           <div class="data-action-row danger-row">
