@@ -210,21 +210,38 @@ const Storage = (() => {
     return btoa(binary);
   }
 
+  const _hasCompressionStream = typeof CompressionStream !== 'undefined';
+
   async function _compress(str) {
+    const b64url = s => btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    if (!_hasCompressionStream) {
+      // Fallback: plain base64url (larger link, but universally supported)
+      return '0' + b64url(unescape(encodeURIComponent(str)));
+    }
+
     const input  = new TextEncoder().encode(str);
     const cs     = new CompressionStream('deflate-raw');
     const writer = cs.writable.getWriter();
     writer.write(input);
     writer.close();
     const buf = await new Response(cs.readable).arrayBuffer();
-    return _uint8ToBase64(new Uint8Array(buf))
+    return '1' + _uint8ToBase64(new Uint8Array(buf))
       .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 
   async function _decompress(b64url) {
-    const b64    = b64url.replace(/-/g, '+').replace(/_/g, '/');
-    const bytes  = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    const ds     = new DecompressionStream('deflate-raw');
+    const mode  = b64url[0];
+    const token = b64url.slice(1);
+
+    if (mode === '0') {
+      // Plain base64url fallback
+      return decodeURIComponent(escape(atob(token.replace(/-/g, '+').replace(/_/g, '/'))));
+    }
+
+    const b64   = token.replace(/-/g, '+').replace(/_/g, '/');
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const ds    = new DecompressionStream('deflate-raw');
     const writer = ds.writable.getWriter();
     writer.write(bytes);
     writer.close();
