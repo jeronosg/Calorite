@@ -268,9 +268,8 @@
   $('btn-add-ai').addEventListener('click', openAIModal);
 
   function openAIModal() {
-    const cfg = Storage.getAIConfig();
-    const isLocal = !AI.needsApiKey(cfg.provider);
-    const hasKey  = isLocal || (cfg.apiKey && cfg.apiKey.trim().length > 0);
+    const cfg    = Storage.getAIConfig();
+    const hasKey = cfg.apiKey && cfg.apiKey.trim().length > 0;
 
     $('ai-setup-notice').classList.toggle('hidden', hasKey);
     $('ai-form-wrap').style.display = hasKey ? '' : 'none';
@@ -377,10 +376,8 @@
     $('goal-water').value = goals.water;
 
     const ai = Storage.getAIConfig();
-    $('ai-provider').value = ai.provider;
-    $('ai-api-key').value  = ai.apiKey || '';
-    $('ai-ollama-model').value = ai.ollamaModel || 'gpt-oss:20b';
-    updateProviderUI(ai.provider, ai.model);
+    $('ai-model').value   = ai.model || 'gemini-3-flash-preview';
+    $('ai-api-key').value = ai.apiKey || '';
   }
 
   // Goals form
@@ -398,47 +395,6 @@
     showToast('Goals saved', 'success');
   });
 
-  // AI provider / model selects
-  $('ai-provider').addEventListener('change', () => {
-    updateProviderUI($('ai-provider').value, null);
-  });
-
-  function updateProviderUI(provider, selectedModel) {
-    const isCloud   = AI.needsApiKey(provider);
-    const isOllama  = provider === 'ollama';
-    const isChromeAI = provider === 'chromeai';
-
-    // Model select (cloud providers only)
-    $('ai-model-wrap').style.display    = isCloud   ? '' : 'none';
-    $('ai-ollama-wrap').style.display   = isOllama  ? '' : 'none';
-    $('ai-chromeai-wrap').style.display = isChromeAI ? '' : 'none';
-    $('ai-key-wrap').style.display      = isCloud   ? '' : 'none';
-
-    if (isCloud) {
-      const models = AI.getModels(provider);
-      $('ai-model').innerHTML = models.map(m =>
-        `<option value="${m.value}"${m.value === selectedModel ? ' selected' : ''}>${m.label}</option>`
-      ).join('');
-    }
-
-    if (isChromeAI) {
-      const statusEl = $('chrome-ai-status');
-      statusEl.className = 'chrome-ai-status pending';
-      statusEl.textContent = '⏳ Checking availability…';
-      AI.getChromeAIStatus().then(status => {
-        const map = {
-          readily:        { cls: 'ready',   icon: '✅', text: 'Ready — Gemini Nano is available on this device.' },
-          'after-download': { cls: 'pending', icon: '⬇️', text: 'Model is downloading. Check back in a few minutes.' },
-          no:             { cls: 'none',    icon: '❌', text: 'Not available. Enable the flag in Chrome Dev/Canary.' },
-          unavailable:    { cls: 'none',    icon: '❌', text: 'Chrome Built-in AI not detected in this browser.' },
-        };
-        const info = map[status] || map.unavailable;
-        statusEl.className = `chrome-ai-status ${info.cls}`;
-        statusEl.textContent = `${info.icon} ${info.text}`;
-      });
-    }
-  }
-
   // Toggle API key visibility
   $('btn-toggle-key').addEventListener('click', () => {
     const inp = $('ai-api-key');
@@ -452,12 +408,9 @@
   // AI config form
   $('form-ai-config').addEventListener('submit', e => {
     e.preventDefault();
-    const provider = $('ai-provider').value;
     Storage.saveAIConfig({
-      provider,
-      model:       AI.needsApiKey(provider) ? $('ai-model').value : $('ai-ollama-model').value.trim() || 'gpt-oss:20b',
-      ollamaModel: $('ai-ollama-model').value.trim() || 'gpt-oss:20b',
-      apiKey:      $('ai-api-key').value.trim(),
+      model:  $('ai-model').value,
+      apiKey: $('ai-api-key').value.trim(),
     });
     closeModal('modal-settings');
     showToast('AI settings saved', 'success');

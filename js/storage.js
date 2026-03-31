@@ -29,9 +29,8 @@ const Storage = (() => {
   };
 
   const DEFAULT_AI = {
-    provider: 'claude',
-    model:    'claude-sonnet-4-6',
-    apiKey:   '',
+    model:  'gemini-3-flash-preview',
+    apiKey: '',
   };
 
   // ---- helpers ----
