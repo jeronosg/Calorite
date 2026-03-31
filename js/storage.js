@@ -247,7 +247,7 @@ const Storage = (() => {
     history.replaceState(null, '', location.pathname + location.search);
   }
 
-
+  function eraseAllData() {
     localStorage.removeItem(KEYS.DAYS);
     localStorage.removeItem(KEYS.GOALS);
     localStorage.removeItem(KEYS.AI);
