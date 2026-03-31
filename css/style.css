@@ -587,6 +587,31 @@ label textarea { resize: vertical; min-height: 70px; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---- CHROME AI STATUS ---- */
+.chrome-ai-status {
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.87rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.chrome-ai-status.ready    { background: rgba(74,222,128,0.12); border: 1px solid #4ade80; color: #4ade80; }
+.chrome-ai-status.pending  { background: rgba(250,204,21,0.12); border: 1px solid #facc15; color: #facc15; }
+.chrome-ai-status.none     { background: rgba(244,63,94,0.12);  border: 1px solid #f43f5e; color: #f43f5e; }
+
+.settings-note code {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: monospace;
+  font-size: 0.82em;
+}
+.settings-note a { color: var(--accent-cal); text-decoration: none; }
+.settings-note a:hover { text-decoration: underline; }
+
 /* ---- RESPONSIVE ---- */
 @media (max-width: 600px) {
   .app-header { padding: 0.6rem 1rem; }
