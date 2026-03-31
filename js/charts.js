@@ -160,6 +160,7 @@ const Charts = (() => {
                   return {
                     text: `${label} ${val}g (${pct}%)`,
                     fillStyle: data.datasets[0].backgroundColor[i],
+                    color: '#8892aa',
                     fontColor: '#8892aa',
                     hidden: false,
                     index: i,
