@@ -199,22 +199,30 @@ INCORRECT output examples (never do these):
   function parseNutritionJSON(text) {
     const raw = text.trim();
 
-    // Strategy 1: greedy match to capture the full {...} block, then JSON.parse
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
+    // Build a list of candidates to try, starting with the most specific.
+    // If the model wrapped its output in a markdown code fence, extract
+    // just the content inside it as the first candidate.
+    const candidates = [];
+    const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenceMatch) candidates.push(fenceMatch[1].trim());
+    candidates.push(raw);
+
+    for (const candidate of candidates) {
+      // Strategy 1: find the outermost {...} block and JSON.parse it
+      const jsonMatch = candidate.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const result = extractFields(JSON.parse(jsonMatch[0]));
+          if (result.calories > 0) return result;
+        } catch { /* fall through */ }
+      }
+
+      // Strategy 2: the whole candidate might already be valid JSON
       try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        const result = extractFields(parsed);
+        const result = extractFields(JSON.parse(candidate));
         if (result.calories > 0) return result;
       } catch { /* fall through */ }
     }
-
-    // Strategy 2: the whole trimmed response might be valid JSON
-    try {
-      const parsed = JSON.parse(raw);
-      const result = extractFields(parsed);
-      if (result.calories > 0) return result;
-    } catch { /* fall through */ }
 
     // Strategy 3: pull each value out by key name using regex —
     // handles "calories: 650" or "calories = 650" even without braces
@@ -226,8 +234,8 @@ INCORRECT output examples (never do these):
     };
     if (result.calories > 0) return result;
 
-    // Nothing worked — include a snippet of the raw response to help debug
-    const snippet = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
+    // Nothing worked — show up to 300 chars of the raw response to help debug
+    const snippet = raw.length > 300 ? raw.slice(0, 300) + '…' : raw;
     throw new Error(`Could not parse AI response. Raw output: "${snippet}"`);
   }
 
