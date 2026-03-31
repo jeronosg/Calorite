@@ -100,7 +100,7 @@ Be realistic with your estimates based on typical portion sizes.`;
   // ---- Ollama (local, no API key) ----
 
   async function estimateWithOllama(description, config) {
-    const model = config.model || 'llama3.2';
+    const model = config.model || 'gpt-oss:20b';
     let response;
 
     try {
