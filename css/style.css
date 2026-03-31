@@ -587,6 +587,45 @@ label textarea { resize: vertical; min-height: 70px; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---- SHARE BANNER ---- */
+.share-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(168,139,250,0.12));
+  border-bottom: 1px solid rgba(56,189,248,0.35);
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+.share-banner.hidden { display: none; }
+.share-banner-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+/* ---- SHARE URL ROW ---- */
+.share-url-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1rem 0.5rem;
+  animation: fade-in 0.15s ease;
+}
+.share-url-row.hidden { display: none; }
+.share-url-row input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--accent-water);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  font-family: monospace;
+  min-width: 0;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ---- CHROME AI STATUS ---- */
 .chrome-ai-status {
   padding: 0.6rem 0.9rem;

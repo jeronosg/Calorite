@@ -460,6 +460,75 @@
     };
   });
 
+  // ---- Share via link ----
+
+  $('btn-share').addEventListener('click', async () => {
+    const btn = $('btn-share');
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    try {
+      const url     = await Storage.generateShareURL();
+      const display = $('share-url-display');
+      display.value = url;
+      $('share-url-row').classList.remove('hidden');
+      display.select();
+    } catch (err) {
+      showToast('Could not generate link: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Share Link';
+    }
+  });
+
+  $('btn-copy-share').addEventListener('click', () => {
+    const input = $('share-url-display');
+    input.select();
+    navigator.clipboard.writeText(input.value)
+      .then(() => showToast('Link copied to clipboard', 'success'))
+      .catch(() => {
+        // fallback for browsers without clipboard API
+        document.execCommand('copy');
+        showToast('Link copied', 'success');
+      });
+  });
+
+  // ---- Share import banner ----
+
+  let pendingShareData = null;
+
+  async function checkShareURL() {
+    try {
+      const data = await Storage.parseShareURL();
+      if (!data) return;
+      pendingShareData = data;
+      $('share-banner').classList.remove('hidden');
+    } catch {
+      // malformed link — silently ignore and clear the hash
+      Storage.clearShareHash();
+    }
+  }
+
+  $('btn-import-share').addEventListener('click', () => {
+    if (!pendingShareData) return;
+    try {
+      Storage.importData(JSON.stringify(pendingShareData));
+      render();
+      showToast('Data imported successfully', 'success');
+    } catch (err) {
+      showToast('Import failed: ' + err.message, 'error');
+    } finally {
+      pendingShareData = null;
+      $('share-banner').classList.add('hidden');
+      Storage.clearShareHash();
+    }
+  });
+
+  $('btn-dismiss-share').addEventListener('click', () => {
+    pendingShareData = null;
+    $('share-banner').classList.add('hidden');
+    Storage.clearShareHash();
+  });
+
   // ---- Keyboard shortcuts ----
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
@@ -479,6 +548,7 @@
       else         { p.style.display = 'none'; }
     });
     render();
+    checkShareURL();
   }
 
   init();

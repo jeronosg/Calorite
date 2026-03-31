@@ -9,6 +9,15 @@
 </head>
 <body>
 
+  <!-- SHARE IMPORT BANNER (shown when URL contains #share=) -->
+  <div id="share-banner" class="share-banner hidden">
+    <span>📲 This link contains shared Calorite data.</span>
+    <div class="share-banner-actions">
+      <button id="btn-import-share" class="btn btn-primary">Import & Merge</button>
+      <button id="btn-dismiss-share" class="btn btn-ghost">Dismiss</button>
+    </div>
+  </div>
+
   <!-- HEADER -->
   <header class="app-header">
     <div class="header-left">
@@ -260,6 +269,17 @@
             <label class="btn btn-primary" for="input-import">Import JSON
               <input type="file" id="input-import" accept=".json" style="display:none" />
             </label>
+          </div>
+          <div class="data-action-row">
+            <div>
+              <strong>Share via Link</strong>
+              <p>Generate a compressed link to transfer your data to another device.</p>
+            </div>
+            <button id="btn-share" class="btn btn-primary">Share Link</button>
+          </div>
+          <div id="share-url-row" class="share-url-row hidden">
+            <input type="text" id="share-url-display" readonly />
+            <button id="btn-copy-share" class="btn btn-primary">Copy</button>
           </div>
           <div class="data-action-row danger-row">
             <div>
