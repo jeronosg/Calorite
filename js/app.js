@@ -379,7 +379,7 @@
     const ai = Storage.getAIConfig();
     $('ai-provider').value = ai.provider;
     $('ai-api-key').value  = ai.apiKey || '';
-    $('ai-ollama-model').value = ai.ollamaModel || 'llama3.2';
+    $('ai-ollama-model').value = ai.ollamaModel || 'gpt-oss:20b';
     updateProviderUI(ai.provider, ai.model);
   }
 
@@ -455,8 +455,8 @@
     const provider = $('ai-provider').value;
     Storage.saveAIConfig({
       provider,
-      model:       AI.needsApiKey(provider) ? $('ai-model').value : $('ai-ollama-model').value.trim() || 'llama3.2',
-      ollamaModel: $('ai-ollama-model').value.trim() || 'llama3.2',
+      model:       AI.needsApiKey(provider) ? $('ai-model').value : $('ai-ollama-model').value.trim() || 'gpt-oss:20b',
+      ollamaModel: $('ai-ollama-model').value.trim() || 'gpt-oss:20b',
       apiKey:      $('ai-api-key').value.trim(),
     });
     closeModal('modal-settings');
