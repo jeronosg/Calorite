@@ -460,6 +460,148 @@
     };
   });
 
+  // ---- Barcode scanner ----
+
+  let _barcodeBaseNutrition = null; // nutrition for 1 serving from lookup
+
+  function _showBarcodeResult(product) {
+    _barcodeBaseNutrition = {
+      name:    product.name,
+      calories: product.calories,
+      protein:  product.protein,
+      carbs:    product.carbs,
+      fat:      product.fat,
+    };
+
+    $('barcode-product-name').textContent = product.name;
+    $('barcode-serving-size').textContent = product.servingSize
+      ? `Per serving: ${product.servingSize}`
+      : 'Values per serving';
+
+    $('barcode-servings').value = '1';
+    _updateBarcodeMacros(1);
+
+    $('barcode-result').classList.remove('hidden');
+    $('btn-barcode-add').classList.remove('hidden');
+    $('barcode-error').classList.add('hidden');
+  }
+
+  function _updateBarcodeMacros(servings) {
+    if (!_barcodeBaseNutrition) return;
+    const s = Math.max(0.25, parseFloat(servings) || 1);
+    $('bc-cal').textContent  = Math.round(_barcodeBaseNutrition.calories * s) + ' kcal';
+    $('bc-prot').textContent = Math.round(_barcodeBaseNutrition.protein  * s) + 'g';
+    $('bc-carb').textContent = Math.round(_barcodeBaseNutrition.carbs    * s) + 'g';
+    $('bc-fat').textContent  = Math.round(_barcodeBaseNutrition.fat      * s) + 'g';
+  }
+
+  async function _runBarcodeLookup(barcode) {
+    const errEl = $('barcode-error');
+    errEl.classList.add('hidden');
+    $('barcode-result').classList.add('hidden');
+    $('btn-barcode-add').classList.add('hidden');
+    _barcodeBaseNutrition = null;
+
+    try {
+      const product = await BarcodeScanner.lookupBarcode(barcode);
+      _showBarcodeResult(product);
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.classList.remove('hidden');
+    }
+  }
+
+  if ($('btn-scan-barcode')) {
+    $('btn-scan-barcode').addEventListener('click', () => {
+      // Reset state
+      $('barcode-result').classList.add('hidden');
+      $('btn-barcode-add').classList.add('hidden');
+      $('barcode-error').classList.add('hidden');
+      $('barcode-input').value   = '';
+      _barcodeBaseNutrition      = null;
+
+      if (BarcodeScanner.isSupported()) {
+        $('barcode-camera-wrap').style.display  = '';
+        $('barcode-no-support').classList.add('hidden');
+
+        openModal('modal-barcode');
+
+        BarcodeScanner.startCamera($('barcode-video'))
+          .then(() => BarcodeScanner.startScanning(
+            $('barcode-video'),
+            $('barcode-canvas'),
+            barcode => {
+              $('barcode-input').value = barcode;
+              _runBarcodeLookup(barcode);
+            }
+          ))
+          .catch(err => {
+            $('barcode-camera-wrap').style.display = 'none';
+            $('barcode-no-support').classList.remove('hidden');
+            $('barcode-no-support').textContent =
+              'Camera access denied or unavailable. Enter the barcode manually.';
+          });
+      } else {
+        $('barcode-camera-wrap').style.display = 'none';
+        $('barcode-no-support').classList.remove('hidden');
+        openModal('modal-barcode');
+      }
+    });
+  }
+
+  // Stop camera whenever the barcode modal closes
+  document.querySelectorAll('[data-close="modal-barcode"]').forEach(btn => {
+    btn.addEventListener('click', () => BarcodeScanner.stopCamera());
+  });
+  if ($('modal-barcode')) {
+    $('modal-barcode').addEventListener('click', e => {
+      if (e.target === $('modal-barcode')) BarcodeScanner.stopCamera();
+    });
+  }
+
+  if ($('btn-barcode-lookup')) {
+    $('btn-barcode-lookup').addEventListener('click', () => {
+      const code = $('barcode-input').value.trim();
+      if (!code) return;
+      _runBarcodeLookup(code);
+    });
+  }
+
+  if ($('barcode-input')) {
+    $('barcode-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const code = $('barcode-input').value.trim();
+        if (code) _runBarcodeLookup(code);
+      }
+    });
+  }
+
+  if ($('barcode-servings')) {
+    $('barcode-servings').addEventListener('input', e => {
+      _updateBarcodeMacros(e.target.value);
+    });
+  }
+
+  if ($('btn-barcode-add')) {
+    $('btn-barcode-add').addEventListener('click', () => {
+      if (!_barcodeBaseNutrition) return;
+      const servings = Math.max(0.25, parseFloat($('barcode-servings').value) || 1);
+      const now = new Date();
+      Storage.addMeal(dateStr(), {
+        name:     _barcodeBaseNutrition.name,
+        calories: Math.round(_barcodeBaseNutrition.calories * servings),
+        protein:  Math.round(_barcodeBaseNutrition.protein  * servings),
+        carbs:    Math.round(_barcodeBaseNutrition.carbs    * servings),
+        fat:      Math.round(_barcodeBaseNutrition.fat      * servings),
+        time:     `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+      });
+      BarcodeScanner.stopCamera();
+      closeModal('modal-barcode');
+      render();
+      showToast('Meal added from barcode', 'success');
+    });
+  }
+
   // ---- Share via link ----
 
   let _pendingShare = null;
