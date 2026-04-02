@@ -612,6 +612,81 @@ label textarea { resize: vertical; min-height: 70px; }
 .settings-note a { color: var(--accent-cal); text-decoration: none; }
 .settings-note a:hover { text-decoration: underline; }
 
+/* ---- SCAN BUTTON ---- */
+.btn-scan { background: linear-gradient(135deg,#34d399,#0ea5e9); color: #fff; }
+.btn-scan:hover { filter: brightness(1.1); }
+
+/* ---- BARCODE CAMERA ---- */
+.barcode-camera-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+}
+.barcode-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.barcode-canvas { display: none; }
+.barcode-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.35);
+}
+.barcode-target {
+  width: 72%;
+  height: 38%;
+  border: 2.5px solid #4ade80;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+  animation: scan-pulse 2s ease-in-out infinite;
+}
+@keyframes scan-pulse {
+  0%, 100% { border-color: #4ade80; }
+  50%       { border-color: #38bdf8; }
+}
+.barcode-hint {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.75);
+}
+
+/* ---- BARCODE RESULT ---- */
+.barcode-result {
+  background: var(--bg);
+  border: 1px solid #4ade80;
+  border-radius: var(--radius);
+  padding: 0.9rem;
+  margin-top: 0.5rem;
+}
+.barcode-result.hidden { display: none; }
+.barcode-product-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.65rem;
+}
+.barcode-product-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.barcode-serving-size {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
 /* ---- SHARE BANNER ---- */
 .share-banner {
   display: flex;

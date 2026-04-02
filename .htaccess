@@ -1,0 +1,18 @@
+# Calorite – Apache cache control for DreamHost
+# Forces browsers to always fetch fresh JS and CSS instead of using
+# a cached copy from a previous visit.
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>
+
+# Fallback via mod_expires if mod_headers is unavailable
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType application/javascript "access plus 0 seconds"
+    ExpiresByType text/css              "access plus 0 seconds"
+</IfModule>
