@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calorite</title>
-  <link rel="stylesheet" href="css/style.css?v=10" />
+  <link rel="stylesheet" href="css/style.css?v=11" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -81,11 +81,26 @@
     <section class="meal-section">
       <div class="section-header">
         <h2>Meals</h2>
-        <div class="add-btns">
-          <button id="btn-add-ai" class="btn btn-ai">&#10024; Ask AI</button>
-          <button id="btn-add-photo" class="btn btn-photo">&#128247; Photo</button>
-          <button id="btn-scan-barcode" class="btn btn-scan">&#9641; Scan</button>
-          <button id="btn-add-manual" class="btn btn-primary">+ Add Meal</button>
+        <div class="add-meal-menu">
+          <button id="btn-add-toggle" class="btn btn-primary">+ Add Meal</button>
+          <div id="add-meal-dropdown" class="add-meal-dropdown" style="display:none">
+            <button id="btn-add-manual" class="add-option">
+              <span class="add-option-icon">&#9998;</span>
+              <div class="add-option-text"><strong>Manual Entry</strong><small>Type in the values</small></div>
+            </button>
+            <button id="btn-add-ai" class="add-option">
+              <span class="add-option-icon">&#10024;</span>
+              <div class="add-option-text"><strong>Ask AI</strong><small>Describe your meal</small></div>
+            </button>
+            <button id="btn-add-photo" class="add-option">
+              <span class="add-option-icon">&#128247;</span>
+              <div class="add-option-text"><strong>Photo</strong><small>Take or upload a photo</small></div>
+            </button>
+            <button id="btn-scan-barcode" class="add-option">
+              <span class="add-option-icon">&#9641;</span>
+              <div class="add-option-text"><strong>Scan Barcode</strong><small>Camera or enter code</small></div>
+            </button>
+          </div>
         </div>
       </div>
       <div id="meal-list" class="meal-list">
@@ -411,10 +426,10 @@
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="js/storage.js?v=10"></script>
-  <script src="js/ai.js?v=10"></script>
-  <script src="js/charts.js?v=10"></script>
-  <script src="js/barcode.js?v=10"></script>
-  <script src="js/app.js?v=10"></script>
+  <script src="js/storage.js?v=11"></script>
+  <script src="js/ai.js?v=11"></script>
+  <script src="js/charts.js?v=11"></script>
+  <script src="js/barcode.js?v=11"></script>
+  <script src="js/app.js?v=11"></script>
 </body>
 </html>
