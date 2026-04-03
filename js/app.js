@@ -42,6 +42,21 @@
     });
   });
 
+  // ---- Add Meal dropdown ----
+  const _addDropdown = $('add-meal-dropdown');
+  if ($('btn-add-toggle') && _addDropdown) {
+    $('btn-add-toggle').addEventListener('click', e => {
+      e.stopPropagation();
+      _addDropdown.style.display = _addDropdown.style.display === 'none' ? '' : 'none';
+    });
+    _addDropdown.addEventListener('click', () => {
+      _addDropdown.style.display = 'none';
+    });
+    document.addEventListener('click', () => {
+      _addDropdown.style.display = 'none';
+    });
+  }
+
   // ---- Date navigation ----
   function formatDateLabel(date) {
     const today = new Date();
