@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calorite</title>
-  <link rel="stylesheet" href="css/style.css?v=8" />
+  <link rel="stylesheet" href="css/style.css?v=10" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -83,6 +83,7 @@
         <h2>Meals</h2>
         <div class="add-btns">
           <button id="btn-add-ai" class="btn btn-ai">&#10024; Ask AI</button>
+          <button id="btn-add-photo" class="btn btn-photo">&#128247; Photo</button>
           <button id="btn-scan-barcode" class="btn btn-scan">&#9641; Scan</button>
           <button id="btn-add-manual" class="btn btn-primary">+ Add Meal</button>
         </div>
@@ -107,6 +108,49 @@
   </main>
 
   <!-- ===== MODALS ===== -->
+
+  <!-- PHOTO ESTIMATION MODAL -->
+  <div id="modal-photo" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Photo Estimation</h2>
+        <button class="modal-close" data-close="modal-photo">&times;</button>
+      </div>
+
+      <label id="photo-drop-zone" class="photo-drop-zone" for="photo-file-input">
+        &#128247;<br>Take a photo or choose from gallery
+        <input type="file" id="photo-file-input" accept="image/*" capture="environment" />
+      </label>
+
+      <div id="photo-preview-wrap" style="display:none">
+        <img id="photo-preview" class="photo-preview" alt="Meal preview" />
+        <button id="btn-photo-retake" class="btn btn-ghost">&#8635; Retake</button>
+      </div>
+
+      <label id="photo-desc-label">Add context <small>(optional)</small>
+        <input type="text" id="photo-desc" placeholder="e.g. large portion, had a side salad too" />
+      </label>
+
+      <div id="photo-result" class="ai-result hidden">
+        <h4>Estimated Nutrition</h4>
+        <div class="ai-result-grid">
+          <div class="ai-result-item"><span class="ai-label">Calories</span><span id="photo-res-cal" class="ai-val">&#8211;</span></div>
+          <div class="ai-result-item"><span class="ai-label">Protein</span><span id="photo-res-prot" class="ai-val">&#8211;</span></div>
+          <div class="ai-result-item"><span class="ai-label">Carbs</span><span id="photo-res-carb" class="ai-val">&#8211;</span></div>
+          <div class="ai-result-item"><span class="ai-label">Fat</span><span id="photo-res-fat" class="ai-val">&#8211;</span></div>
+        </div>
+        <p class="ai-disclaimer">AI photo estimates may vary. Review before saving.</p>
+      </div>
+
+      <div id="photo-error" class="ai-error hidden"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close="modal-photo">Cancel</button>
+        <button type="button" id="btn-photo-estimate" class="btn btn-ai" disabled>&#10024; Estimate</button>
+        <button type="button" id="btn-photo-add" class="btn btn-primary" style="display:none">Add to Log</button>
+      </div>
+    </div>
+  </div>
 
   <!-- BARCODE SCAN MODAL -->
   <div id="modal-barcode" class="modal-overlay hidden">
@@ -367,10 +411,10 @@
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="js/storage.js?v=9"></script>
-  <script src="js/ai.js?v=9"></script>
-  <script src="js/charts.js?v=9"></script>
-  <script src="js/barcode.js?v=9"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/storage.js?v=10"></script>
+  <script src="js/ai.js?v=10"></script>
+  <script src="js/charts.js?v=10"></script>
+  <script src="js/barcode.js?v=10"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 </html>

@@ -112,5 +112,84 @@ const AI = (() => {
     return MODELS;
   }
 
-  return { estimate, getModels };
+  // Resize an image File to max 1024px and return base64-encoded JPEG string.
+  // Keeps the payload small before sending to the Gemini API.
+  async function resizeImageToBase64(file, maxPx = 1024, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale  = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  // Estimate nutrition from a photo using Gemini Vision.
+  // base64Data: the raw base64 string (no data: prefix)
+  // mimeType:   e.g. 'image/jpeg'
+  // extraContext: optional free-text hint from the user
+  async function estimateFromPhoto(base64Data, mimeType, extraContext = '') {
+    const config = Storage.getAIConfig();
+    if (!config.apiKey) throw new Error('No Gemini API key set. Open Settings → AI to add one.');
+
+    const model = config.model || 'gemini-3-flash-preview';
+    const url   = `${BASE_URL}/${model}:generateContent?key=${config.apiKey}`;
+
+    const textPart = extraContext.trim()
+      ? `Estimate the nutritional content of this meal. Additional context: ${extraContext}`
+      : 'Estimate the nutritional content of the meal in this image. Consider all visible food items and estimate portions based on the plate, utensils, or other size references visible.';
+
+    let response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+          contents: [{
+            role: 'user',
+            parts: [
+              { inlineData: { mimeType, data: base64Data } },
+              { text: textPart },
+            ],
+          }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: RESPONSE_SCHEMA,
+            temperature: 0.1,
+          },
+        }),
+      });
+    } catch (err) {
+      throw new Error(`Network error reaching Gemini API: ${err.message}`);
+    }
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Gemini API error (${response.status})`);
+    }
+
+    const data = await response.json();
+    const candidate = data.candidates?.[0];
+    if (!candidate) {
+      const feedback = data.promptFeedback?.blockReason;
+      throw new Error(feedback ? `Request blocked: ${feedback}` : 'Gemini returned no candidates.');
+    }
+    if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+      throw new Error(`Gemini stopped unexpectedly: ${candidate.finishReason}`);
+    }
+    const text = candidate.content?.parts?.[0]?.text || '';
+    if (!text) throw new Error('Gemini returned an empty response.');
+    return parseResponse(text);
+  }
+
+  return { estimate, estimateFromPhoto, resizeImageToBase64, getModels };
 })();

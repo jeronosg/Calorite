@@ -602,6 +602,111 @@
     });
   }
 
+  // ---- Photo estimation ----
+
+  let _photoResult = null;
+  let _photoFile   = null;
+
+  function _resetPhotoModal() {
+    _photoResult = null;
+    _photoFile   = null;
+    $('photo-file-input').value              = '';
+    $('photo-desc').value                    = '';
+    $('photo-drop-zone').style.display       = '';
+    $('photo-preview-wrap').style.display    = 'none';
+    $('photo-result').classList.add('hidden');
+    $('photo-error').classList.add('hidden');
+    $('btn-photo-add').style.display         = 'none';
+    $('btn-photo-estimate').disabled         = true;
+  }
+
+  if ($('btn-add-photo')) {
+    $('btn-add-photo').addEventListener('click', () => {
+      _resetPhotoModal();
+      openModal('modal-photo');
+    });
+  }
+
+  if ($('photo-file-input')) {
+    $('photo-file-input').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      _photoFile = file;
+      $('photo-preview').src                 = URL.createObjectURL(file);
+      $('photo-drop-zone').style.display     = 'none';
+      $('photo-preview-wrap').style.display  = '';
+      $('photo-result').classList.add('hidden');
+      $('photo-error').classList.add('hidden');
+      $('btn-photo-add').style.display       = 'none';
+      $('btn-photo-estimate').disabled       = false;
+    });
+  }
+
+  if ($('btn-photo-retake')) {
+    $('btn-photo-retake').addEventListener('click', () => {
+      _photoFile = null;
+      $('photo-file-input').value            = '';
+      $('photo-preview-wrap').style.display  = 'none';
+      $('photo-drop-zone').style.display     = '';
+      $('btn-photo-estimate').disabled       = true;
+      $('photo-result').classList.add('hidden');
+      $('photo-error').classList.add('hidden');
+      $('btn-photo-add').style.display       = 'none';
+    });
+  }
+
+  if ($('btn-photo-estimate')) {
+    $('btn-photo-estimate').addEventListener('click', async () => {
+      if (!_photoFile) return;
+      const btn = $('btn-photo-estimate');
+      btn.disabled  = true;
+      btn.innerHTML = '<span class="spinner"></span> Analysing\u2026';
+      $('photo-error').classList.add('hidden');
+      $('photo-result').classList.add('hidden');
+      $('btn-photo-add').style.display = 'none';
+      _photoResult = null;
+
+      try {
+        const base64 = await AI.resizeImageToBase64(_photoFile);
+        const ctx    = $('photo-desc').value.trim();
+        const result = await AI.estimateFromPhoto(base64, 'image/jpeg', ctx);
+        _photoResult = result;
+
+        $('photo-res-cal').textContent  = result.calories + ' kcal';
+        $('photo-res-prot').textContent = result.protein  + 'g';
+        $('photo-res-carb').textContent = result.carbs    + 'g';
+        $('photo-res-fat').textContent  = result.fat      + 'g';
+        $('photo-result').classList.remove('hidden');
+        $('btn-photo-add').style.display = '';
+      } catch (err) {
+        $('photo-error').textContent = err.message;
+        $('photo-error').classList.remove('hidden');
+      } finally {
+        btn.disabled  = false;
+        btn.innerHTML = '&#10024; Estimate';
+      }
+    });
+  }
+
+  if ($('btn-photo-add')) {
+    $('btn-photo-add').addEventListener('click', () => {
+      if (!_photoResult) return;
+      const now = new Date();
+      Storage.addMeal(dateStr(), {
+        name:        $('photo-desc').value.trim() || 'Photo meal',
+        calories:    _photoResult.calories,
+        protein:     _photoResult.protein,
+        carbs:       _photoResult.carbs,
+        fat:         _photoResult.fat,
+        time:        `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
+        aiGenerated: true,
+      });
+      closeModal('modal-photo');
+      render();
+      showToast('Photo meal added \u2728', 'success');
+    });
+  }
+
   // ---- Share via link ----
 
   let _pendingShare = null;
