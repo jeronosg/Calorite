@@ -615,6 +615,43 @@ label textarea { resize: vertical; min-height: 70px; }
 /* ---- SCAN BUTTON ---- */
 .btn-scan { background: linear-gradient(135deg,#34d399,#0ea5e9); color: #fff; }
 .btn-scan:hover { filter: brightness(1.1); }
+.btn-photo { background: linear-gradient(135deg,#a78bfa,#ec4899); color: #fff; }
+.btn-photo:hover { filter: brightness(1.1); }
+
+/* ---- PHOTO MODAL ---- */
+.photo-drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+  transition: var(--transition);
+  margin-bottom: 0.85rem;
+}
+.photo-drop-zone:hover { border-color: var(--accent-cal); color: var(--text); }
+.photo-drop-zone input[type="file"] { display: none; }
+
+.photo-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+.photo-preview {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
 
 /* ---- BARCODE CAMERA ---- */
 .barcode-camera-wrap {
