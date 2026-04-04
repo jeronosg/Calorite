@@ -702,30 +702,6 @@ label textarea { resize: vertical; min-height: 70px; }
   border: 1px solid var(--border);
 }
 
-/* ---- INSIGHTS ---- */
-.insights-section { margin-bottom: 1.5rem; }
-.insights-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-}
-.insight-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 0.5rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-}
-.insight-icon  { font-size: 1.3rem; }
-.insight-value { font-size: 1.5rem; font-weight: 700; }
-.insight-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.insight-card.streak-active { border-color: var(--accent-cal); }
-.insight-card.streak-active .insight-value { color: var(--accent-cal); }
-
 /* ---- BARCODE CAMERA ---- */
 .barcode-camera-wrap {
   position: relative;
@@ -845,5 +821,4 @@ label textarea { resize: vertical; min-height: 70px; }
   .logo { font-size: 1.1rem; }
 .meal-item { gap: 0.6rem; }
   .ai-result-grid { grid-template-columns: repeat(2, 1fr); }
-  .insights-cards { grid-template-columns: repeat(2, 1fr); }
 }
