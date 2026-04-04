@@ -152,7 +152,7 @@ const Storage = (() => {
    * If today has no meals yet, counts backwards from yesterday.
    */
   function getStreak() {
-    const days = _loadDays();
+    const days = _get(KEYS.DAYS) || {};
     const today = new Date();
     let d = new Date(today);
     let streak = 0;
