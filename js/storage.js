@@ -152,18 +152,21 @@ const Storage = (() => {
    * If today has no meals yet, counts backwards from yesterday.
    */
   function getStreak() {
-    const days = _get(KEYS.DAYS) || {};
-    const today = new Date();
-    let d = new Date(today);
-    let streak = 0;
+    const allDays = getAllDays();
+    const today   = new Date();
+    let d         = new Date(today);
+    let streak    = 0;
 
+    // Don't penalise user if they haven't logged today yet
     const todayKey = dateKey(today);
-    const todayHasMeals = days[todayKey]?.meals?.length > 0;
-    if (!todayHasMeals) d.setDate(d.getDate() - 1);
+    if (!allDays[todayKey] || !(allDays[todayKey].meals.length > 0)) {
+      d.setDate(d.getDate() - 1);
+    }
 
     for (let i = 0; i < 365; i++) {
-      const key = dateKey(d);
-      if (days[key]?.meals?.length > 0) {
+      const key  = dateKey(d);
+      const data = allDays[key];
+      if (data && data.meals && data.meals.length > 0) {
         streak++;
         d.setDate(d.getDate() - 1);
       } else {
@@ -308,8 +311,8 @@ const Storage = (() => {
     deleteMeal,
     setWater,
     getDayTotals,
-    getWeekSummary,
     getStreak,
+    getWeekSummary,
     getGoals,
     saveGoals,
     getAIConfig,
