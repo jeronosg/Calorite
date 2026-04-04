@@ -192,9 +192,36 @@
     })[c]);
   }
 
+  // ---- Insights ----
+  function renderInsights() {
+    const weekly = Storage.getWeekSummary(7);
+    const goals  = Storage.getGoals();
+    const streak = Storage.getStreak();
+
+    $('streak-value').textContent = streak;
+    $('insight-streak-card').classList.toggle('streak-active', streak > 0);
+
+    const activeDays = weekly.filter(d => d.totals.calories > 0);
+    if (activeDays.length === 0) {
+      $('insight-avg-cal').textContent   = '–';
+      $('insight-on-target').textContent = '–';
+      $('insight-avg-prot').textContent  = '–';
+      return;
+    }
+
+    const avgCal   = Math.round(activeDays.reduce((s, d) => s + d.totals.calories, 0) / activeDays.length);
+    const onTarget = weekly.filter(d => d.totals.calories > 0 && d.totals.calories <= goals.calories).length;
+    const avgProt  = Math.round(activeDays.reduce((s, d) => s + d.totals.protein, 0) / activeDays.length);
+
+    $('insight-avg-cal').textContent   = avgCal;
+    $('insight-on-target').textContent = `${onTarget}/7`;
+    $('insight-avg-prot').textContent  = avgProt + 'g';
+  }
+
   // ---- Full render ----
   function render() {
     renderSummary();
+    renderInsights();
     renderMealList();
     renderCharts();
   }
