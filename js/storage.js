@@ -147,6 +147,35 @@ const Storage = (() => {
     return result;
   }
 
+  /**
+   * Returns the current logging streak in days.
+   * If today has no meals yet, counts backwards from yesterday.
+   */
+  function getStreak() {
+    const allDays = getAllDays();
+    const today   = new Date();
+    let d         = new Date(today);
+    let streak    = 0;
+
+    // Don't penalise user if they haven't logged today yet
+    const todayKey = dateKey(today);
+    if (!allDays[todayKey] || !(allDays[todayKey].meals.length > 0)) {
+      d.setDate(d.getDate() - 1);
+    }
+
+    for (let i = 0; i < 365; i++) {
+      const key  = dateKey(d);
+      const data = allDays[key];
+      if (data && data.meals && data.meals.length > 0) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
   // ---- Goals ----
 
   function getGoals() {
@@ -282,6 +311,7 @@ const Storage = (() => {
     deleteMeal,
     setWater,
     getDayTotals,
+    getStreak,
     getWeekSummary,
     getGoals,
     saveGoals,
