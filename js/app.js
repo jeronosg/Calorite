@@ -247,9 +247,12 @@
     $('modal-meal-title').textContent = 'Add Meal';
     $('btn-save-meal').textContent = 'Save';
     $('form-meal').reset();
+    $('meal-picker-wrap').style.display = 'none';
     // Default time to now
     const now = new Date();
     $('meal-time').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    // Show Library button only if library has items
+    $('btn-from-library').style.display = Storage.getMealLibrary().length > 0 ? '' : 'none';
     openModal('modal-meal');
     setTimeout(() => $('meal-name').focus(), 50);
   }
@@ -295,6 +298,181 @@
     closeModal('modal-meal');
     render();
   });
+
+  // "Save to Library" from the Add Meal form
+  $('btn-save-to-library').addEventListener('click', function() {
+    var name = $('meal-name').value.trim();
+    if (!name) { showToast('Enter a meal name first', 'error'); return; }
+    Storage.addToLibrary({
+      name:     name,
+      calories: parseFloat($('meal-cal').value)  || 0,
+      protein:  parseFloat($('meal-prot').value) || 0,
+      carbs:    parseFloat($('meal-carb').value) || 0,
+      fat:      parseFloat($('meal-fat').value)  || 0,
+    });
+    $('btn-from-library').style.display = '';
+    showToast('\u{1F4DA} Saved to library', 'success');
+  });
+
+  // "From Library" picker inside Add Meal modal
+  $('btn-from-library').addEventListener('click', function() {
+    _renderMealPicker();
+    $('meal-picker-wrap').style.display = '';
+  });
+
+  $('btn-close-picker').addEventListener('click', function() {
+    $('meal-picker-wrap').style.display = 'none';
+  });
+
+  function _renderMealPicker() {
+    var items = Storage.getMealLibrary();
+    var list  = $('meal-picker-list');
+    if (items.length === 0) {
+      list.innerHTML = '<p class="empty-state">Library is empty.</p>';
+      return;
+    }
+    list.innerHTML = items.map(function(item) {
+      return '<button type="button" class="meal-pick-btn" '
+        + 'data-name="' + escHtml(item.name) + '" '
+        + 'data-cal="'  + item.calories + '" '
+        + 'data-prot="' + item.protein  + '" '
+        + 'data-carb="' + item.carbs    + '" '
+        + 'data-fat="'  + item.fat      + '">'
+        + '<span class="pick-name">' + escHtml(item.name) + '</span>'
+        + '<span class="pick-macros">' + item.calories + ' kcal'
+        + (item.protein ? ' &middot; P ' + item.protein + 'g' : '')
+        + (item.carbs   ? ' &middot; C ' + item.carbs   + 'g' : '')
+        + (item.fat     ? ' &middot; F ' + item.fat     + 'g' : '')
+        + '</span>'
+        + '</button>';
+    }).join('');
+
+    list.querySelectorAll('.meal-pick-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        $('meal-name').value = btn.dataset.name;
+        $('meal-cal').value  = btn.dataset.cal;
+        $('meal-prot').value = btn.dataset.prot;
+        $('meal-carb').value = btn.dataset.carb;
+        $('meal-fat').value  = btn.dataset.fat;
+        $('meal-picker-wrap').style.display = 'none';
+      });
+    });
+  }
+
+  // ---- Meal Library modal ----
+  if ($('btn-open-library')) {
+    $('btn-open-library').addEventListener('click', function() {
+      _resetLibraryForm();
+      _renderLibraryList();
+      openModal('modal-library');
+    });
+  }
+
+  var _editingLibraryId = null;
+
+  function _resetLibraryForm() {
+    _editingLibraryId = null;
+    $('form-library').reset();
+    $('library-form-title').textContent = 'New Meal';
+    $('btn-lib-save').textContent       = 'Add to Library';
+    $('btn-lib-cancel').style.display   = 'none';
+  }
+
+  $('form-library').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var data = {
+      name:     $('lib-name').value.trim(),
+      calories: parseFloat($('lib-cal').value)  || 0,
+      protein:  parseFloat($('lib-prot').value) || 0,
+      carbs:    parseFloat($('lib-carb').value) || 0,
+      fat:      parseFloat($('lib-fat').value)  || 0,
+    };
+    if (_editingLibraryId) {
+      Storage.updateLibraryMeal(_editingLibraryId, data);
+      showToast('Meal updated', 'success');
+    } else {
+      Storage.addToLibrary(data);
+      showToast('\u{1F4DA} Added to library', 'success');
+    }
+    _resetLibraryForm();
+    _renderLibraryList();
+  });
+
+  $('btn-lib-cancel').addEventListener('click', function() {
+    _resetLibraryForm();
+  });
+
+  function _renderLibraryList() {
+    var items     = Storage.getMealLibrary();
+    var container = $('library-list');
+    if (items.length === 0) {
+      container.innerHTML = '<p class="empty-state">No saved meals yet. Add one above!</p>';
+      return;
+    }
+    container.innerHTML = items.map(function(item) {
+      return '<div class="library-item" data-id="' + item.id + '">'
+        + '<div class="library-item-info">'
+        + '<div class="library-item-name">' + escHtml(item.name) + '</div>'
+        + '<div class="library-item-macros">'
+        + item.calories + ' kcal'
+        + (item.protein ? ' &middot; P ' + item.protein + 'g' : '')
+        + (item.carbs   ? ' &middot; C ' + item.carbs   + 'g' : '')
+        + (item.fat     ? ' &middot; F ' + item.fat     + 'g' : '')
+        + '</div>'
+        + '</div>'
+        + '<div class="library-item-btns">'
+        + '<button class="btn btn-primary lib-log-btn" data-id="' + item.id + '">Log</button>'
+        + '<button class="icon-btn lib-edit-btn" data-id="' + item.id + '" title="Edit">&#9998;</button>'
+        + '<button class="icon-btn lib-del-btn"  data-id="' + item.id + '" title="Delete">&#128465;</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    container.querySelectorAll('.lib-log-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = Storage.getMealLibrary().find(function(m) { return m.id === btn.dataset.id; });
+        if (!item) return;
+        var now = new Date();
+        Storage.addMeal(dateStr(), {
+          name:     item.name,
+          calories: item.calories,
+          protein:  item.protein,
+          carbs:    item.carbs,
+          fat:      item.fat,
+          time:     String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0'),
+        });
+        closeModal('modal-library');
+        render();
+        showToast(escHtml(item.name) + ' logged', 'success');
+      });
+    });
+
+    container.querySelectorAll('.lib-edit-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = Storage.getMealLibrary().find(function(m) { return m.id === btn.dataset.id; });
+        if (!item) return;
+        _editingLibraryId             = item.id;
+        $('library-form-title').textContent = 'Edit Meal';
+        $('btn-lib-save').textContent       = 'Save Changes';
+        $('btn-lib-cancel').style.display   = '';
+        $('lib-name').value = item.name;
+        $('lib-cal').value  = item.calories;
+        $('lib-prot').value = item.protein;
+        $('lib-carb').value = item.carbs;
+        $('lib-fat').value  = item.fat;
+        $('lib-name').focus();
+      });
+    });
+
+    container.querySelectorAll('.lib-del-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        Storage.deleteFromLibrary(btn.dataset.id);
+        if (_editingLibraryId === btn.dataset.id) _resetLibraryForm();
+        _renderLibraryList();
+        showToast('Removed from library');
+      });
+    });
+  }
 
   // ---- Delete meal ----
   function confirmDeleteMeal(mealId) {
