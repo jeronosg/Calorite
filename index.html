@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calorite</title>
-  <link rel="stylesheet" href="css/style.css?v=12" />
+  <link rel="stylesheet" href="css/style.css?v=14" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -118,6 +118,25 @@
         <h3>Today's Macros</h3>
         <canvas id="chart-macros"></canvas>
       </div>
+    </section>
+
+    <!-- WEIGHT TRACKER -->
+    <section class="weight-section">
+      <div class="section-header">
+        <h2>Weight</h2>
+        <div class="weight-log-form">
+          <input type="number" id="weight-input" class="weight-input" placeholder="175" step="0.1" min="0" />
+          <select id="weight-unit" class="weight-unit-select">
+            <option value="lbs">lbs</option>
+            <option value="kg">kg</option>
+          </select>
+          <button id="btn-log-weight" class="btn btn-primary">Log</button>
+        </div>
+      </div>
+      <div id="chart-weight-wrap" class="chart-card" style="display:none">
+        <canvas id="chart-weight"></canvas>
+      </div>
+      <div id="weight-entries" class="weight-entries"></div>
     </section>
 
   </main>
@@ -426,10 +445,10 @@
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="js/storage.js?v=11"></script>
-  <script src="js/ai.js?v=11"></script>
-  <script src="js/charts.js?v=11"></script>
-  <script src="js/barcode.js?v=11"></script>
-  <script src="js/app.js?v=11"></script>
+  <script src="js/storage.js?v=13"></script>
+  <script src="js/ai.js?v=13"></script>
+  <script src="js/charts.js?v=13"></script>
+  <script src="js/barcode.js?v=13"></script>
+  <script src="js/app.js?v=13"></script>
 </body>
 </html>

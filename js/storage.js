@@ -15,9 +15,10 @@
 
 const Storage = (() => {
   const KEYS = {
-    DAYS:  'calorite_days',
-    GOALS: 'calorite_goals',
-    AI:    'calorite_ai',
+    DAYS:   'calorite_days',
+    GOALS:  'calorite_goals',
+    AI:     'calorite_ai',
+    WEIGHT: 'calorite_weight',
   };
 
   const DEFAULT_GOALS = {
@@ -269,6 +270,31 @@ const Storage = (() => {
     history.replaceState(null, '', location.pathname + location.search);
   }
 
+  // ---- Weight log ----
+
+  function getWeightLog() {
+    return _get(KEYS.WEIGHT) || [];
+  }
+
+  function addWeightEntry(weight, unit) {
+    const log     = getWeightLog();
+    const today   = dateKey(new Date());
+    const entry   = { date: today, weight: parseFloat(weight), unit: unit || 'lbs' };
+    const existing = log.findIndex(function(e) { return e.date === today; });
+    if (existing >= 0) {
+      log[existing] = entry; // replace same-day entry
+    } else {
+      log.push(entry);
+    }
+    _set(KEYS.WEIGHT, log);
+  }
+
+  function deleteWeightEntry(index) {
+    const log = getWeightLog();
+    log.splice(index, 1);
+    _set(KEYS.WEIGHT, log);
+  }
+
   // ---- public API ----
   return {
     generateShareURL,
@@ -283,6 +309,9 @@ const Storage = (() => {
     setWater,
     getDayTotals,
     getWeekSummary,
+    getWeightLog,
+    addWeightEntry,
+    deleteWeightEntry,
     getGoals,
     saveGoals,
     getAIConfig,
