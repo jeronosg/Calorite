@@ -838,6 +838,65 @@
     }
   });
 
+  // ---- Weight tracker ----
+
+  function renderWeightSection() {
+    const log    = Storage.getWeightLog();
+    const last10 = log.slice(-10);
+
+    // Sync unit selector to last logged unit
+    if ($('weight-unit') && last10.length > 0) {
+      $('weight-unit').value = last10[last10.length - 1].unit;
+    }
+
+    // Chart
+    $('chart-weight-wrap').style.display = last10.length > 0 ? '' : 'none';
+    Charts.renderWeight('chart-weight', last10);
+
+    // Entries list (newest first)
+    const container = $('weight-entries');
+    if (last10.length === 0) {
+      container.innerHTML = '<p class="empty-state">No weight entries yet. Log your first one above!</p>';
+      return;
+    }
+
+    const reversed = last10.slice().reverse();
+    container.innerHTML = reversed.map(function(e, i) {
+      const globalIdx = log.length - 1 - i;
+      const d = new Date(e.date + 'T00:00:00');
+      const label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      return '<div class="weight-entry">'
+        + '<span class="weight-entry-date">' + label + '</span>'
+        + '<span class="weight-entry-val">' + e.weight + ' <small>' + e.unit + '</small></span>'
+        + '<button class="weight-del-btn icon-btn small" data-idx="' + globalIdx + '" title="Delete">&#128465;</button>'
+        + '</div>';
+    }).join('');
+
+    container.querySelectorAll('.weight-del-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        Storage.deleteWeightEntry(parseInt(btn.dataset.idx));
+        renderWeightSection();
+      });
+    });
+  }
+
+  if ($('btn-log-weight')) {
+    $('btn-log-weight').addEventListener('click', function() {
+      var val = parseFloat($('weight-input').value);
+      if (!val || val <= 0) { showToast('Enter a valid weight', 'error'); return; }
+      Storage.addWeightEntry(val, $('weight-unit').value);
+      $('weight-input').value = '';
+      renderWeightSection();
+      showToast('Weight logged', 'success');
+    });
+  }
+
+  if ($('weight-input')) {
+    $('weight-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') $('btn-log-weight').click();
+    });
+  }
+
   // ---- Init ----
   function init() {
     updateDateDisplay();
@@ -848,6 +907,7 @@
       else         { p.style.display = 'none'; }
     });
     render();
+    renderWeightSection();
     checkShareURL();
   }
 

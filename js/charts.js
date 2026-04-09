@@ -5,6 +5,7 @@
 const Charts = (() => {
   let weeklyChart = null;
   let macroChart  = null;
+  let weightChart = null;
 
   const COLORS = {
     calories: '#f97316',
@@ -180,5 +181,66 @@ const Charts = (() => {
     });
   }
 
-  return { renderWeekly, renderMacros };
+  // ---- Weight line chart ----
+  function renderWeight(canvasId, entries) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+
+    if (weightChart) { weightChart.destroy(); weightChart = null; }
+    if (!entries || entries.length === 0) return;
+
+    const unit   = entries[entries.length - 1].unit;
+    const labels = entries.map(function(e) {
+      return new Date(e.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+    const values = entries.map(function(e) { return e.weight; });
+
+    weightChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Weight',
+          data: values,
+          borderColor: '#a78bfa',
+          backgroundColor: 'rgba(167,139,250,0.08)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#a78bfa',
+          pointBorderColor: '#a78bfa',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.35,
+          fill: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        animation: { duration: 300 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(c) { return ' ' + c.parsed.y + ' ' + unit; },
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: COLORS.grid },
+            ticks: { maxRotation: 0, font: { size: 11 } },
+          },
+          y: {
+            grid: { color: COLORS.grid },
+            ticks: {
+              font: { size: 11 },
+              callback: function(v) { return v + ' ' + unit; },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  return { renderWeekly, renderMacros, renderWeight };
 })();
