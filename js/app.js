@@ -228,6 +228,7 @@
     renderInsights();
     renderMealList();
     renderCharts();
+    renderWeightSection();
   }
 
   function renderCharts() {
@@ -882,8 +883,8 @@
 
   if ($('btn-log-weight')) {
     $('btn-log-weight').addEventListener('click', function() {
-      var val = parseFloat($('weight-input').value);
-      if (!val || val <= 0) { showToast('Enter a valid weight', 'error'); return; }
+      var val = $('weight-input').valueAsNumber;
+      if (isNaN(val) || val <= 0) { showToast('Enter a valid weight', 'error'); return; }
       Storage.addWeightEntry(val, $('weight-unit').value);
       $('weight-input').value = '';
       renderWeightSection();
