@@ -15,10 +15,11 @@
 
 const Storage = (() => {
   const KEYS = {
-    DAYS:   'calorite_days',
-    GOALS:  'calorite_goals',
-    AI:     'calorite_ai',
-    WEIGHT: 'calorite_weight',
+    DAYS:    'calorite_days',
+    GOALS:   'calorite_goals',
+    AI:      'calorite_ai',
+    WEIGHT:  'calorite_weight',
+    LIBRARY: 'calorite_library',
   };
 
   const DEFAULT_GOALS = {
@@ -324,6 +325,40 @@ const Storage = (() => {
     _set(KEYS.WEIGHT, log);
   }
 
+  // ---- Meal Library ----
+
+  function getMealLibrary() {
+    return _get(KEYS.LIBRARY) || [];
+  }
+
+  function addToLibrary(item) {
+    const lib   = getMealLibrary();
+    const entry = {
+      id:       _uuid(),
+      name:     item.name     || 'Saved Meal',
+      calories: Number(item.calories) || 0,
+      protein:  Number(item.protein)  || 0,
+      carbs:    Number(item.carbs)    || 0,
+      fat:      Number(item.fat)      || 0,
+    };
+    lib.push(entry);
+    _set(KEYS.LIBRARY, lib);
+    return entry;
+  }
+
+  function updateLibraryMeal(id, updates) {
+    const lib = getMealLibrary();
+    const idx = lib.findIndex(function(m) { return m.id === id; });
+    if (idx === -1) return null;
+    lib[idx] = Object.assign({}, lib[idx], updates);
+    _set(KEYS.LIBRARY, lib);
+    return lib[idx];
+  }
+
+  function deleteFromLibrary(id) {
+    _set(KEYS.LIBRARY, getMealLibrary().filter(function(m) { return m.id !== id; }));
+  }
+
   // ---- public API ----
   return {
     generateShareURL,
@@ -342,6 +377,10 @@ const Storage = (() => {
     getWeightLog,
     addWeightEntry,
     deleteWeightEntry,
+    getMealLibrary,
+    addToLibrary,
+    updateLibraryMeal,
+    deleteFromLibrary,
     getGoals,
     saveGoals,
     getAIConfig,

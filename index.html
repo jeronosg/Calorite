@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calorite</title>
-  <link rel="stylesheet" href="css/style.css?v=14" />
+  <link rel="stylesheet" href="css/style.css?v=15" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -87,6 +87,10 @@
             <button id="btn-add-manual" class="add-option">
               <span class="add-option-icon">&#9998;</span>
               <div class="add-option-text"><strong>Manual Entry</strong><small>Type in the values</small></div>
+            </button>
+            <button id="btn-open-library" class="add-option">
+              <span class="add-option-icon">&#128218;</span>
+              <div class="add-option-text"><strong>Meal Library</strong><small>Pick a saved meal</small></div>
             </button>
             <button id="btn-add-ai" class="add-option">
               <span class="add-option-icon">&#10024;</span>
@@ -278,10 +282,21 @@
         <h2 id="modal-meal-title">Add Meal</h2>
         <button class="modal-close" data-close="modal-meal">&times;</button>
       </div>
+      <!-- Library quick-pick panel -->
+      <div id="meal-picker-wrap" style="display:none">
+        <div class="meal-picker-header">
+          <span>Pick from Library</span>
+          <button type="button" id="btn-close-picker" class="icon-btn small">&#10005;</button>
+        </div>
+        <div id="meal-picker-list" class="meal-picker-list"></div>
+      </div>
       <form id="form-meal" autocomplete="off">
-        <label>Meal Name
-          <input type="text" id="meal-name" placeholder="e.g. Chicken breast & rice" required />
-        </label>
+        <div class="meal-form-top">
+          <label style="flex:1">Meal Name
+            <input type="text" id="meal-name" placeholder="e.g. Chicken breast & rice" required />
+          </label>
+          <button type="button" id="btn-from-library" class="btn btn-ghost btn-sm" style="display:none;align-self:flex-end">&#128218; Library</button>
+        </div>
         <div class="form-row">
           <label>Calories (kcal)
             <input type="number" id="meal-cal" placeholder="0" min="0" required />
@@ -306,9 +321,45 @@
         </label>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" data-close="modal-meal">Cancel</button>
+          <button type="button" id="btn-save-to-library" class="btn btn-ghost">&#128218; Save to Library</button>
           <button type="submit" class="btn btn-primary" id="btn-save-meal">Save</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MEAL LIBRARY MODAL -->
+  <div id="modal-library" class="modal-overlay hidden">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h2>&#128218; Meal Library</h2>
+        <button class="modal-close" data-close="modal-library">&times;</button>
+      </div>
+      <form id="form-library" autocomplete="off" class="library-form">
+        <h3 id="library-form-title">New Meal</h3>
+        <label>Name
+          <input type="text" id="lib-name" placeholder="e.g. Chicken breast & rice" required />
+        </label>
+        <div class="form-row">
+          <label>Calories
+            <input type="number" id="lib-cal" placeholder="0" min="0" />
+          </label>
+          <label>Protein (g)
+            <input type="number" id="lib-prot" placeholder="0" min="0" step="0.1" />
+          </label>
+          <label>Carbs (g)
+            <input type="number" id="lib-carb" placeholder="0" min="0" step="0.1" />
+          </label>
+          <label>Fat (g)
+            <input type="number" id="lib-fat" placeholder="0" min="0" step="0.1" />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="btn-lib-cancel" class="btn btn-ghost" style="display:none">Cancel Edit</button>
+          <button type="submit" id="btn-lib-save" class="btn btn-primary">Add to Library</button>
+        </div>
+      </form>
+      <div id="library-list" class="library-list"></div>
     </div>
   </div>
 
@@ -474,10 +525,10 @@
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="js/storage.js?v=14"></script>
-  <script src="js/ai.js?v=14"></script>
-  <script src="js/charts.js?v=14"></script>
-  <script src="js/barcode.js?v=14"></script>
-  <script src="js/app.js?v=14"></script>
+  <script src="js/storage.js?v=15"></script>
+  <script src="js/ai.js?v=15"></script>
+  <script src="js/charts.js?v=15"></script>
+  <script src="js/barcode.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
 </body>
 </html>
