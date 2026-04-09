@@ -192,9 +192,40 @@
     })[c]);
   }
 
+  // ---- Insights ----
+  function renderInsights() {
+    try {
+      const weekly  = Storage.getWeekSummary(7);
+      const goals   = Storage.getGoals();
+      const streak  = Storage.getStreak();
+
+      $('streak-value').textContent = streak;
+      $('insight-streak-card').classList.toggle('streak-active', streak > 0);
+
+      const activeDays = weekly.filter(function(d) { return d.totals.calories > 0; });
+      if (activeDays.length === 0) {
+        $('insight-avg-cal').textContent   = '–';
+        $('insight-on-target').textContent = '–';
+        $('insight-avg-prot').textContent  = '–';
+        return;
+      }
+
+      var avgCal   = Math.round(activeDays.reduce(function(s, d) { return s + d.totals.calories; }, 0) / activeDays.length);
+      var onTarget = weekly.filter(function(d) { return d.totals.calories > 0 && d.totals.calories <= goals.calories; }).length;
+      var avgProt  = Math.round(activeDays.reduce(function(s, d) { return s + d.totals.protein; }, 0) / activeDays.length);
+
+      $('insight-avg-cal').textContent   = avgCal;
+      $('insight-on-target').textContent = onTarget + '/7';
+      $('insight-avg-prot').textContent  = avgProt + 'g';
+    } catch (e) {
+      // Silently skip insights if anything goes wrong — never block meal list
+    }
+  }
+
   // ---- Full render ----
   function render() {
     renderSummary();
+    renderInsights();
     renderMealList();
     renderCharts();
   }
