@@ -31,9 +31,13 @@ const Storage = (() => {
   };
 
   const DEFAULT_AI = {
-    model:  'gemini-3-flash-preview',
+    model:  'gemini-3.8-flash',
     apiKey: '',
   };
+
+  // Models the app currently offers — anything else saved (retired or
+  // preview models) is upgraded to the default on read.
+  const SUPPORTED_MODELS = ['gemini-3.8-flash'];
 
   // ---- helpers ----
 
@@ -191,7 +195,9 @@ const Storage = (() => {
   // ---- AI Config ----
 
   function getAIConfig() {
-    return Object.assign({}, DEFAULT_AI, _get(KEYS.AI));
+    const config = Object.assign({}, DEFAULT_AI, _get(KEYS.AI));
+    if (SUPPORTED_MODELS.indexOf(config.model) === -1) config.model = DEFAULT_AI.model;
+    return config;
   }
 
   function saveAIConfig(config) {

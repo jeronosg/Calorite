@@ -128,10 +128,9 @@ The AI estimation features require a free Google Gemini API key.
 
 | Model | Notes |
 |---|---|
-| `gemini-3-flash-preview` | Default — fast and accurate for food estimation |
-| `gemini-2.0-flash` | Stable alternative |
-| `gemini-1.5-flash` | Lightweight option |
-| `gemini-1.5-pro` | Most capable, slower |
+| `gemini-3.8-flash` | Default — fast, generally available, supports text and image input |
+
+Requests use `thinkingLevel: "low"` to keep latency down, and send no `temperature` (Gemini 3.x rejects sampling parameters). Photos are downscaled to 768px JPEG in the browser before upload. Any previously saved model that's no longer offered is automatically upgraded to the default.
 
 ---
 
