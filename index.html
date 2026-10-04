@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calorite</title>
-  <link rel="stylesheet" href="css/style.css?v=17" />
+  <link rel="stylesheet" href="css/style.css?v=18" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -206,7 +206,7 @@
           <div class="ai-result-item"><span class="ai-label">Carbs</span><span id="photo-res-carb" class="ai-val">&#8211;</span></div>
           <div class="ai-result-item"><span class="ai-label">Fat</span><span id="photo-res-fat" class="ai-val">&#8211;</span></div>
         </div>
-        <p class="ai-disclaimer">AI photo estimates may vary. Review before saving.</p>
+        <p class="ai-disclaimer">AI photo estimates may vary. Review before saving. <span id="photo-res-meta"></span></p>
       </div>
 
       <div id="photo-error" class="ai-error hidden"></div>
@@ -444,6 +444,7 @@
           <label>Model
             <select id="ai-model">
               <option value="gemini-3.8-flash">Gemini 3.8 Flash (recommended)</option>
+              <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (fastest)</option>
             </select>
           </label>
           <label>Gemini API Key
@@ -522,10 +523,10 @@
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="js/storage.js?v=17"></script>
-  <script src="js/ai.js?v=17"></script>
-  <script src="js/charts.js?v=17"></script>
-  <script src="js/barcode.js?v=17"></script>
-  <script src="js/app.js?v=17"></script>
+  <script src="js/storage.js?v=18"></script>
+  <script src="js/ai.js?v=18"></script>
+  <script src="js/charts.js?v=18"></script>
+  <script src="js/barcode.js?v=18"></script>
+  <script src="js/app.js?v=18"></script>
 </body>
 </html>

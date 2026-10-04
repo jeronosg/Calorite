@@ -37,7 +37,7 @@ const Storage = (() => {
 
   // Models the app currently offers — anything else saved (retired or
   // preview models) is upgraded to the default on read.
-  const SUPPORTED_MODELS = ['gemini-3.8-flash'];
+  const SUPPORTED_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
 
   // ---- helpers ----
 

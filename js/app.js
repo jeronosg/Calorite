@@ -901,10 +901,17 @@
       $('btn-photo-add').style.display = 'none';
       _photoResult = null;
 
+      const started = Date.now();
+      let ticker = null;
       try {
         if (!_photoPrep) _photoPrep = AI.resizeImageToBase64(_photoFile);
         const base64 = await _photoPrep;
-        btn.innerHTML = '<span class="spinner"></span> Analysing\u2026';
+        // Live seconds counter so a slow response doesn't look frozen
+        const tick = () => {
+          btn.innerHTML = '<span class="spinner"></span> Analysing\u2026 ' + Math.floor((Date.now() - started) / 1000) + 's';
+        };
+        tick();
+        ticker = setInterval(tick, 1000);
         const ctx    = $('photo-desc').value.trim();
         const result = await AI.estimateFromPhoto(base64, 'image/jpeg', ctx);
         _photoResult = result;
@@ -913,12 +920,15 @@
         $('photo-res-prot').textContent = result.protein  + 'g';
         $('photo-res-carb').textContent = result.carbs    + 'g';
         $('photo-res-fat').textContent  = result.fat      + 'g';
+        $('photo-res-meta').textContent = AI.getModelLabel(result.model) + ' \u00b7 '
+          + ((Date.now() - started) / 1000).toFixed(1) + 's';
         $('photo-result').classList.remove('hidden');
         $('btn-photo-add').style.display = '';
       } catch (err) {
         $('photo-error').textContent = err.message;
         $('photo-error').classList.remove('hidden');
       } finally {
+        clearInterval(ticker);
         btn.disabled  = false;
         btn.innerHTML = '&#10024; Estimate';
       }

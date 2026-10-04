@@ -4,13 +4,18 @@
 
 const AI = (() => {
 
-  const BASE_URL      = 'https://generativelanguage.googleapis.com/v1beta/models';
-  const DEFAULT_MODEL = 'gemini-3.8-flash';
-  const TIMEOUT_MS    = 45000;
+  const BASE_URL       = 'https://generativelanguage.googleapis.com/v1beta/models';
+  const DEFAULT_MODEL  = 'gemini-3.8-flash';
+  const FALLBACK_MODEL = 'gemini-3.5-flash-lite';
+  const TIMEOUT_MS     = 20000; // per attempt — a stalled model hands off to the fallback
 
   const MODELS = [
-    { value: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash (recommended)' },
+    { value: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash (recommended)' },
+    { value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite (fastest)' },
   ];
+
+  // Errors worth handing to the other model: overloaded, internal, rate-limited, timed out
+  const RETRYABLE = [429, 500, 503, 'timeout'];
 
   // responseSchema locks the output format at the API level —
   // Gemini cannot return prose or markdown when this is set.
@@ -34,56 +39,88 @@ const AI = (() => {
   // ---- Shared request helper ----
 
   // Gemini 3.x rejects sampling params (temperature/top_p/top_k), so none are sent.
-  // Low thinking keeps latency down — a calorie estimate doesn't need deep reasoning.
-  function buildBody(parts) {
+  // 3.8 Flash gets low thinking to cut latency; Flash-Lite already defaults to minimal.
+  // Medium media resolution sends fewer image tokens than the default (high) —
+  // plenty of detail to recognise food, and faster to process.
+  function buildBody(model, parts) {
+    const generationConfig = {
+      responseMimeType: 'application/json',
+      responseSchema:   RESPONSE_SCHEMA,
+      mediaResolution:  'MEDIA_RESOLUTION_MEDIUM',
+    };
+    if (model === 'gemini-3.8-flash') generationConfig.thinkingConfig = { thinkingLevel: 'low' };
     return JSON.stringify({
       systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
       contents: [{ role: 'user', parts }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema:   RESPONSE_SCHEMA,
-        thinkingConfig:   { thinkingLevel: 'low' },
-      },
+      generationConfig,
     });
   }
 
-  async function fetchWithTimeout(url, options) {
+  // One request to one model. Throws an Error with .retryable set when the
+  // other model is worth trying.
+  async function requestModel(model, apiKey, parts) {
+    const url        = `${BASE_URL}/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer      = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    let response;
     try {
-      return await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+      response = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    buildBody(model, parts),
+        signal:  controller.signal,
+      });
     } catch (err) {
-      if (err.name === 'AbortError') {
-        throw new Error(`Gemini took longer than ${TIMEOUT_MS / 1000}s to respond. Check your connection and try again.`);
-      }
-      throw new Error(`Network error reaching Gemini API: ${err.message}`);
+      const timedOut = err.name === 'AbortError';
+      const e = new Error(timedOut
+        ? `Gemini took longer than ${TIMEOUT_MS / 1000}s to respond.`
+        : `Network error reaching Gemini API: ${err.message}`);
+      e.retryable = timedOut;
+      throw e;
     } finally {
       clearTimeout(timer);
     }
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      const e = new Error(body.error?.message || `Gemini API error (${response.status})`);
+      e.status    = response.status;
+      e.retryable = RETRYABLE.indexOf(response.status) !== -1;
+      throw e;
+    }
+    return response.json();
   }
 
   async function callGemini(parts) {
     const config = Storage.getAIConfig();
     if (!config.apiKey) throw new Error('No Gemini API key set. Open Settings → AI to add one.');
 
-    const model   = config.model || DEFAULT_MODEL;
-    const url     = `${BASE_URL}/${model}:generateContent?key=${encodeURIComponent(config.apiKey)}`;
-    const options = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: buildBody(parts) };
+    const primary = config.model || DEFAULT_MODEL;
+    const backup  = primary === FALLBACK_MODEL ? DEFAULT_MODEL : FALLBACK_MODEL;
 
-    let response = await fetchWithTimeout(url, options);
-
-    // Retry once on transient server errors (overloaded / internal)
-    if (response.status === 500 || response.status === 503) {
-      await new Promise(r => setTimeout(r, 1500));
-      response = await fetchWithTimeout(url, options);
+    // If the chosen model is overloaded or slow, go straight to the other one —
+    // retrying a busy model rarely helps and just adds wait time.
+    let data, usedModel = primary;
+    try {
+      data = await requestModel(primary, config.apiKey, parts);
+    } catch (err) {
+      if (!err.retryable) throw err;
+      usedModel = backup;
+      try {
+        data = await requestModel(backup, config.apiKey, parts);
+      } catch (err2) {
+        if (!err2.retryable) throw err2;
+        throw new Error('Google’s Gemini servers are busy right now (both models). Please try again in a moment.');
+      }
     }
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Gemini API error (${response.status})`);
-    }
+    const result = parseCandidate(data);
+    result.model = usedModel;
+    return result;
+  }
 
-    const data      = await response.json();
+  function parseCandidate(data) {
     const candidate = data.candidates?.[0];
     if (!candidate) {
       const feedback = data.promptFeedback?.blockReason;
@@ -182,5 +219,10 @@ const AI = (() => {
     });
   }
 
-  return { estimate, estimateFromPhoto, resizeImageToBase64, getModels, DEFAULT_MODEL };
+  function getModelLabel(value) {
+    const m = MODELS.find(m => m.value === value);
+    return m ? m.label.replace(/\s*\(.*\)$/, '') : value;
+  }
+
+  return { estimate, estimateFromPhoto, resizeImageToBase64, getModels, getModelLabel, DEFAULT_MODEL };
 })();
