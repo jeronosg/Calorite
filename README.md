@@ -128,9 +128,12 @@ The AI estimation features require a free Google Gemini API key.
 
 | Model | Notes |
 |---|---|
-| `gemini-3.8-flash` | Default — fast, generally available, supports text and image input |
+| `gemini-3.8-flash` | Default — most accurate, supports text and image input |
+| `gemini-3.5-flash-lite` | Fastest — lighter model, also used as the automatic fallback |
 
-Requests use `thinkingLevel: "low"` to keep latency down, and send no `temperature` (Gemini 3.x rejects sampling parameters). Photos are downscaled to 768px JPEG in the browser before upload. Any previously saved model that's no longer offered is automatically upgraded to the default.
+**Reliability:** if the chosen model returns 503 ("high demand"), 429, 500, or takes longer than 20s, Calorite immediately retries on the other model. Free-tier API keys are deprioritised by Google during busy periods, so enabling billing on your Google AI Studio project is the most effective way to avoid 503s.
+
+**Speed:** requests send no `temperature` (Gemini 3.x rejects sampling parameters), use `thinkingLevel: "low"` on 3.8 Flash (Flash-Lite defaults to minimal), and `MEDIA_RESOLUTION_MEDIUM` for images. Photos are downscaled to 768px JPEG in the browser as soon as they're picked. Any previously saved model that's no longer offered is automatically upgraded to the default.
 
 ---
 
