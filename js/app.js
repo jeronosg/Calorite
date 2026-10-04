@@ -604,7 +604,7 @@
     $('goal-water').value = goals.water;
 
     const ai = Storage.getAIConfig();
-    $('ai-model').value   = ai.model || 'gemini-3-flash-preview';
+    $('ai-model').value   = ai.model || AI.DEFAULT_MODEL;
     $('ai-api-key').value = ai.apiKey || '';
   }
 
@@ -834,10 +834,12 @@
 
   let _photoResult = null;
   let _photoFile   = null;
+  let _photoPrep   = null; // Promise<base64> — resize starts as soon as a photo is picked
 
   function _resetPhotoModal() {
     _photoResult = null;
     _photoFile   = null;
+    _photoPrep   = null;
     $('photo-file-input').value              = '';
     $('photo-desc').value                    = '';
     $('photo-drop-zone').style.display       = '';
@@ -860,6 +862,10 @@
       const file = e.target.files[0];
       if (!file) return;
       _photoFile = file;
+      const prep = AI.resizeImageToBase64(file);
+      _photoPrep = prep;
+      // Errors surface on Estimate; clearing lets the next click retry
+      prep.catch(() => { if (_photoPrep === prep) _photoPrep = null; });
       $('photo-preview').src                 = URL.createObjectURL(file);
       $('photo-drop-zone').style.display     = 'none';
       $('photo-preview-wrap').style.display  = '';
@@ -873,6 +879,7 @@
   if ($('btn-photo-retake')) {
     $('btn-photo-retake').addEventListener('click', () => {
       _photoFile = null;
+      _photoPrep = null;
       $('photo-file-input').value            = '';
       $('photo-preview-wrap').style.display  = 'none';
       $('photo-drop-zone').style.display     = '';
@@ -888,14 +895,16 @@
       if (!_photoFile) return;
       const btn = $('btn-photo-estimate');
       btn.disabled  = true;
-      btn.innerHTML = '<span class="spinner"></span> Analysing\u2026';
+      btn.innerHTML = '<span class="spinner"></span> Preparing photo\u2026';
       $('photo-error').classList.add('hidden');
       $('photo-result').classList.add('hidden');
       $('btn-photo-add').style.display = 'none';
       _photoResult = null;
 
       try {
-        const base64 = await AI.resizeImageToBase64(_photoFile);
+        if (!_photoPrep) _photoPrep = AI.resizeImageToBase64(_photoFile);
+        const base64 = await _photoPrep;
+        btn.innerHTML = '<span class="spinner"></span> Analysing\u2026';
         const ctx    = $('photo-desc').value.trim();
         const result = await AI.estimateFromPhoto(base64, 'image/jpeg', ctx);
         _photoResult = result;
